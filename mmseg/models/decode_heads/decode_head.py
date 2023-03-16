@@ -277,16 +277,16 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
             output = self.conv_seg(feat)
         else:
             B, C, H, W = feat.shape
-            assert self.text_embeddings, \
+            assert self.text_embeddings is not None, \
                 "Text embedding have not been initialized yet."
             assert self.text_embeddings.shape[0] == self.out_channels, \
                 "Number of text embedding and classes not match."
             assert self.text_embeddings.shape[1] == C, \
-                "Dimensions between text embeddings and feature maps not match."
+                f"Dimensions between text embeddings ({self.text_embeddings.shape[1]}) and feature maps ({C}) not match."
 
             # compute score map
-            text_embeddings = self.text_embeddings.unsqueeze(0).expand(B, -1, -1).type(feat.dtype)
-            logit_scale = self.logit_scale.type(feat.dtype)
+            text_embeddings = self.text_embeddings.unsqueeze(0).expand(B, -1, -1).type(feat.dtype).to(feat.device)
+            logit_scale = self.logit_scale.type(feat.dtype).to(feat.device)
             feat = nn.functional.normalize(feat, dim=1, p=2)
             text_embeddings = nn.functional.normalize(text_embeddings, dim=2, p=2)
             output = logit_scale * torch.einsum('bchw,bkc->bkhw', feat, text_embeddings)
