@@ -80,6 +80,8 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
                  sampler=None,
                  align_corners=False,
                  downsample_label_ratio=0,
+                 use_cosine_similarity=False,
+                 temperature=0.07,
                  init_cfg=dict(
                      type='Normal', std=0.01, override=dict(name='conv_seg'))):
         super(BaseDecodeHead, self).__init__(init_cfg)
@@ -138,11 +140,18 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
         else:
             self.sampler = None
 
-        self.conv_seg = nn.Conv2d(channels, self.out_channels, kernel_size=1)
-        if dropout_ratio > 0:
-            self.dropout = nn.Dropout2d(dropout_ratio)
+        self.use_cosine_similarity = use_cosine_similarity
+        if not self.use_cosine_similarity:
+            self.conv_seg = nn.Conv2d(channels, self.out_channels, kernel_size=1)
+            if dropout_ratio > 0:
+                self.dropout = nn.Dropout2d(dropout_ratio)
+            else:
+                self.dropout = None
         else:
-            self.dropout = None
+            self.text_embeddings: torch.Tensor = None
+            self.temperature = temperature
+            self.logit_scale = torch.tensor(1 / self.temperature)
+
         self.fp16_enabled = False
 
     def extra_repr(self):
@@ -262,9 +271,26 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
 
     def cls_seg(self, feat):
         """Classify each pixel."""
-        if self.dropout is not None:
-            feat = self.dropout(feat)
-        output = self.conv_seg(feat)
+        if not self.use_cosine_similarity:
+            if self.dropout is not None:
+                feat = self.dropout(feat)
+            output = self.conv_seg(feat)
+        else:
+            B, C, H, W = feat.shape
+            assert self.text_embeddings, \
+                "Text embedding have not been initialized yet."
+            assert self.text_embeddings.shape[0] == self.out_channels, \
+                "Number of text embedding and classes not match."
+            assert self.text_embeddings.shape[1] == C, \
+                "Dimensions between text embeddings and feature maps not match."
+
+            # compute score map
+            text_embeddings = self.text_embeddings.unsqueeze(0).expand(B, -1, -1).type(feat.dtype)
+            logit_scale = self.logit_scale.type(feat.dtype)
+            feat = nn.functional.normalize(feat, dim=1, p=2)
+            text_embeddings = nn.functional.normalize(text_embeddings, dim=2, p=2)
+            output = logit_scale * torch.einsum('bchw,bkc->bkhw', feat, text_embeddings)
+
         return output
 
     @force_fp32(apply_to=('seg_logit', ))
