@@ -117,4 +117,5 @@ work_dirs/
 mmseg/.mim
 
 # Pytorch
+*.pt
 *.pth
