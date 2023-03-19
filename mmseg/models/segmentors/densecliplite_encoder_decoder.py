@@ -9,9 +9,11 @@ from .. import builder
 from ..builder import SEGMENTORS
 from .base import BaseSegmentor
 
+from clip import tokenize
+
 
 @SEGMENTORS.register_module()
-class EncoderDecoder(BaseSegmentor):
+class DenseCLIPLite(BaseSegmentor):
     """Encoder Decoder segmentors.
 
     EncoderDecoder typically consists of backbone, decode_head, auxiliary_head.
@@ -21,19 +23,34 @@ class EncoderDecoder(BaseSegmentor):
 
     def __init__(self,
                  backbone,
+                 text_encoder,
+                 context_length,
                  decode_head,
+                 token_embed_dim=512,
+                 score_concat_index=-1,
                  neck=None,
                  auxiliary_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None,
                  init_cfg=None):
-        super(EncoderDecoder, self).__init__(init_cfg)
+        super(DenseCLIPLite, self).__init__(init_cfg)
         if pretrained is not None:
             assert backbone.get('pretrained') is None, \
                 'both backbone and segmentor set pretrained weight'
             backbone.pretrained = pretrained
+            assert text_encoder.get('pretrained') is None, \
+                'both text encoder and segmentor set pretrained weight'
+            if 'RN50' not in pretrained and 'RN101' not in pretrained and 'ViT-B' not in pretrained:
+                print('not CLIP pre-trained weight, using CLIP ViT-B-16')
+                text_encoder.pretrained = 'pretrained/ViT-B-16.pt'
+            else:
+                text_encoder.pretrained = pretrained
         self.backbone = builder.build_backbone(backbone)
+        self.text_encoder = builder.build_backbone(text_encoder)
+        self.context_length = context_length
+        self.score_concat_index = score_concat_index
+
         if neck is not None:
             self.neck = builder.build_neck(neck)
         self._init_decode_head(decode_head)
@@ -41,6 +58,11 @@ class EncoderDecoder(BaseSegmentor):
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+
+        self.texts = torch.cat([tokenize(c, context_length=self.context_length) for c in self.CLASSES])
+        context_length = self.text_encoder.context_length - self.context_length
+        self.contexts = nn.Parameter(torch.randn(1, context_length, token_embed_dim))
+        nn.init.trunc_normal_(self.contexts)
 
         assert self.with_decode_head
 
@@ -64,9 +86,10 @@ class EncoderDecoder(BaseSegmentor):
     def extract_feat(self, img):
         """Extract features from images."""
         x = self.backbone(img)
+        x, score_map = self.get_score_map(x)
         if self.with_neck:
             x = self.neck(x)
-        return x
+        return x + [score_map]
 
     def encode_decode(self, img, img_metas):
         """Encode images with backbone and decode into a semantic segmentation
@@ -119,6 +142,22 @@ class EncoderDecoder(BaseSegmentor):
         seg_logit = self.encode_decode(img, None)
 
         return seg_logit
+
+    def get_score_map(self, x):
+        x_orig = list(x[0:3])
+        visual_embeddings = x[-1]
+
+        B, C, H, W = visual_embeddings.shape
+        # (B, K, C)
+        text_embeddings = self.text_encoder(self.texts.to(visual_embeddings.device), self.contexts).expand(B, -1, -1)
+
+        # compute score map and concat
+        B, K, C = text_embeddings.shape
+        visual_embeddings = F.normalize(visual_embeddings, dim=1, p=2)
+        text = F.normalize(text_embeddings, dim=2, p=2)
+        score_map = torch.einsum('bchw,bkc->bkhw', visual_embeddings, text)
+        x_orig[self.score_concat_index] = torch.cat([x_orig[self.score_concat_index], score_map], dim=1)
+        return x_orig, score_map
 
     def forward_train(self, img, img_metas, gt_semantic_seg):
         """Forward function for training.
