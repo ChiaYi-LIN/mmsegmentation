@@ -502,3 +502,79 @@ class STDCTextNet(BaseModule):
         # `feat_fuse` is outputted for decoder head.
         outputs = [outs[0]] + list(arms_out) + [feat_fuse_with_score] + [score_map]
         return tuple(outputs)
+
+
+@BACKBONES.register_module()
+class STDCEnTextNet(BaseModule):
+    def __init__(self,
+                 backbone_cfg,
+                 last_in_channels=(1024, 512),
+                 out_channels=128,
+                 ffm_cfg=dict(
+                     in_channels=512, out_channels=256, scale_factor=4),
+                 text_embeddings=None,
+                 upsample_mode='nearest',
+                 align_corners=None,
+                 norm_cfg=dict(type='BN'),
+                 init_cfg=None):
+        super(STDCEnTextNet, self).__init__(init_cfg=init_cfg)
+        self.backbone = build_backbone(backbone_cfg)
+        self.arms = ModuleList()
+        self.convs = ModuleList()
+        for channels in last_in_channels:
+            self.arms.append(AttentionRefinementModule(channels, out_channels))
+            self.convs.append(
+                ConvModule(
+                    out_channels,
+                    out_channels,
+                    3,
+                    padding=1,
+                    norm_cfg=norm_cfg))
+        self.conv_avg = ConvModule(
+            last_in_channels[0], out_channels, 1, norm_cfg=norm_cfg)
+
+        self.ffm = FeatureFusionModule(**ffm_cfg)
+        self.text_embeddings = torch.load(text_embeddings)
+
+        self.upsample_mode = upsample_mode
+        self.align_corners = align_corners
+
+    def forward(self, x):
+        outs = list(self.backbone(x))
+
+        # Text Path
+        feat = outs[-1]
+        B, C, H, W = feat.shape
+        text_embeddings = self.text_embeddings.unsqueeze(0).expand(B, -1, -1).type(feat.dtype).to(feat.device)
+        feat = nn.functional.normalize(feat, dim=1, p=2)
+        text_embeddings = nn.functional.normalize(text_embeddings, dim=2, p=2)
+        score_map = torch.einsum('bchw,bkc->bkhw', feat, text_embeddings)
+        outs[-1] = torch.cat([outs[-1], score_map], dim=1)
+
+        # Context Path
+        avg = F.adaptive_avg_pool2d(outs[-1], 1)
+        avg_feat = self.conv_avg(avg)
+        feature_up = resize(
+            avg_feat,
+            size=outs[-1].shape[2:],
+            mode=self.upsample_mode,
+            align_corners=self.align_corners)
+        arms_out = []
+        for i in range(len(self.arms)):
+            x_arm = self.arms[i](outs[len(outs) - 1 - i]) + feature_up
+            feature_up = resize(
+                x_arm,
+                size=outs[len(outs) - 1 - i - 1].shape[2:],
+                mode=self.upsample_mode,
+                align_corners=self.align_corners)
+            feature_up = self.convs[i](feature_up)
+            arms_out.append(feature_up)
+
+        feat_fuse = self.ffm(outs[0], arms_out[1])
+
+        # The `outputs` has four feature maps.
+        # `outs[0]` is outputted for `STDCHead` auxiliary head.
+        # Two feature maps of `arms_out` are outputted for auxiliary head.
+        # `feat_fuse` is outputted for decoder head.
+        outputs = [outs[0]] + list(arms_out) + [feat_fuse] + [score_map]
+        return tuple(outputs)
