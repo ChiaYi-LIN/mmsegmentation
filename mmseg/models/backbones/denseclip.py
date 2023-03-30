@@ -7,6 +7,7 @@ from collections import OrderedDict
 import torch
 import torch.nn.functional as F
 from torch import nn
+from mmcv.runner import BaseModule
 from timm.models.layers import drop_path, trunc_normal_
 from mmseg.models.builder import BACKBONES
 
@@ -615,20 +616,38 @@ class CLIPTextEncoder(nn.Module):
 
 
 @BACKBONES.register_module()
-class CLIPTextContextEncoder(nn.Module):
+class CLIPTextContextEncoder(BaseModule):
+    arch_settings = {
+        'RN50': {
+            'vocab_size': 49408,
+            'transformer_width': 512,
+            'transformer_heads': 8,
+            'transformer_layers': 12,
+            'embed_dim': 1024,
+        },
+        'RN101': {
+            'vocab_size': 49408,
+            'transformer_width': 512,
+            'transformer_heads': 8,
+            'transformer_layers': 12,
+            'embed_dim': 512,
+        },
+    }
     def __init__(self, context_length=22,
-                 vocab_size=49408,
-                 transformer_width=512,
-                 transformer_heads=8,
-                 transformer_layers=12,
-                 embed_dim=1024,
-                 out_dim=256,
+                 encoder_type='RN50',
                  pretrained=None, **kwargs):
-        super().__init__()
-
-        self.pretrained = pretrained
+        super().__init__(**kwargs)
+        assert encoder_type in self.arch_settings
+        if pretrained is not None:
+            self.pretrained = pretrained
+            self.init_cfg = dict(type='Pretrained', checkpoint=pretrained)
 
         self.context_length = context_length
+        vocab_size = self.arch_settings[encoder_type]['vocab_size']
+        transformer_width = self.arch_settings[encoder_type]['transformer_width']
+        transformer_heads = self.arch_settings[encoder_type]['transformer_heads']
+        transformer_layers = self.arch_settings[encoder_type]['transformer_layers']
+        embed_dim = self.arch_settings[encoder_type]['embed_dim']
 
         self.transformer = Transformer(
             width=transformer_width,
@@ -664,6 +683,7 @@ class CLIPTextContextEncoder(nn.Module):
 
             u, w = self.load_state_dict(state_dict, False)
             print(u, w, 'are misaligned params in text encoder')
+            assert len(u) == 0, f"Missing keys: {u}"
 
     def build_attention_mask(self):
         # lazily create causal attention mask, with full attention between the vision tokens
@@ -674,17 +694,21 @@ class CLIPTextContextEncoder(nn.Module):
         return mask
 
     def forward(self, text, context):
+        """
+        Input
+            text: (n_class, context_length for class label)
+            context: (n_class, context_length for learnable context, transformer_width)
+        Ouput
+            context-aware text embeddingds: (1, n_class, embed_dim)
+        """
         x_text = self.token_embedding(text)  # n_clas, n_text, C
-        K, N1, C = x_text.shape
-        B, N2, C = context.shape
+        K1, N1, C1 = x_text.shape
+        K2, N2, C2 = context.shape
+        assert (K1 == K2) and (C1 == C2)
 
         eos_indx = text.argmax(dim=-1) + N2
-        eos_indx = eos_indx.reshape(1, K).expand(B, K).reshape(-1)
 
-        x_text = x_text.reshape(1, K, N1, C).expand(B, K, N1, C)
-        context = context.reshape(B, 1, N2, C).expand(B, K, N2, C)
-
-        x = torch.cat([x_text[:, :, 0:1], context, x_text[:, :, 1:]], dim=2).reshape(B*K, N1+N2, C)
+        x = torch.cat([x_text[:, 0:1], context, x_text[:, 1:]], dim=1).reshape(K1, N1+N2, C1)
 
         x = x + self.positional_embedding
         x = x.permute(1, 0, 2)  # NLD -> LND
@@ -692,7 +716,7 @@ class CLIPTextContextEncoder(nn.Module):
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x)
         x = x[torch.arange(x.shape[0]), eos_indx] @ self.text_projection
-        x = x.reshape(B, K, self.embed_dim)
+        x = x.reshape(1, K1, self.embed_dim)
         return x
 
 
