@@ -9,22 +9,21 @@ from .decode_head import BaseDecodeHead
 
 
 @HEADS.register_module()
-class AttentionPool2d(BaseDecodeHead):
+class AttentionPoolHead(BaseDecodeHead):
     def __init__(
         self,
         spacial_dim: int,
-        embed_dim: int,
         num_heads: int,
-        output_dim: int = None,
-        pretrained: bool = None,
+        pretrained: str = None,
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.pretrained = pretrained
-        if isinstance(pretrained, str):
-            warnings.warn('DeprecationWarning: pretrained is a deprecated, '
-                          'please use "init_cfg" instead')
+        if pretrained is not None:
+            self.pretrained = pretrained
             self.init_cfg = dict(type='Pretrained', checkpoint=pretrained)
+
+        embed_dim = self.in_channels
+        output_dim = self.channels
 
         self.positional_embedding = nn.Parameter(torch.randn(spacial_dim ** 2 + 1, embed_dim) / embed_dim ** 0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
@@ -73,7 +72,7 @@ class AttentionPool2d(BaseDecodeHead):
         global_feat = x[:, :, 0]
         feature_map = x[:, :, 1:].reshape(B, -1, H, W)
         return global_feat, feature_map
-    
+
     def forward(self, inputs):
         """Forward function."""
         _, output = self._forward_feature(inputs)
@@ -86,6 +85,6 @@ if __name__ == "__main__":
     in_dim = 1024
     out_dim = 256
     x = torch.rand([1, in_dim, resolution, resolution])
-    layer = AttentionPool2d(resolution, in_dim, 32, out_dim)
+    layer = AttentionPoolHead(resolution, in_dim, 32, out_dim)
     global_feat, feature_map = layer(x)
     print(f"{x.shape} -> {feature_map.shape}")
