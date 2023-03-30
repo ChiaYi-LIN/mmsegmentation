@@ -195,6 +195,22 @@ def main():
     meta['seed'] = seed
     meta['exp_name'] = osp.basename(args.config)
 
+    datasets = [build_dataset(cfg.data.train)]
+    if len(cfg.workflow) == 2:
+        val_dataset = copy.deepcopy(cfg.data.val)
+        val_dataset.pipeline = cfg.data.train.pipeline
+        datasets.append(build_dataset(val_dataset))
+    if cfg.checkpoint_config is not None:
+        # save mmseg version, config file content and class names in
+        # checkpoints as meta data
+        cfg.checkpoint_config.meta = dict(
+            mmseg_version=f'{__version__}+{get_git_hash()[:7]}',
+            config=cfg.pretty_text,
+            CLASSES=datasets[0].CLASSES,
+            PALETTE=datasets[0].PALETTE)
+
+    if 'CLASSES' in cfg.model['backbone']:
+        cfg.model['backbone']['CLASSES'] = datasets[0].CLASSES
     model = build_segmentor(
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
@@ -211,19 +227,6 @@ def main():
 
     logger.info(model)
 
-    datasets = [build_dataset(cfg.data.train)]
-    if len(cfg.workflow) == 2:
-        val_dataset = copy.deepcopy(cfg.data.val)
-        val_dataset.pipeline = cfg.data.train.pipeline
-        datasets.append(build_dataset(val_dataset))
-    if cfg.checkpoint_config is not None:
-        # save mmseg version, config file content and class names in
-        # checkpoints as meta data
-        cfg.checkpoint_config.meta = dict(
-            mmseg_version=f'{__version__}+{get_git_hash()[:7]}',
-            config=cfg.pretty_text,
-            CLASSES=datasets[0].CLASSES,
-            PALETTE=datasets[0].PALETTE)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
     # passing checkpoint meta for saving best checkpoint
