@@ -81,6 +81,8 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
                  align_corners=False,
                  downsample_label_ratio=0,
                  use_cosine_similarity=False,
+                 text_embeddings=None,
+                 dummy_num_classes=1,
                  temperature=0.07,
                  init_cfg=dict(
                      type='Normal', std=0.01, override=dict(name='conv_seg'))):
@@ -100,6 +102,10 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
            self.downsample_label_ratio < 0:
             warnings.warn('downsample_label_ratio should '
                           'be set as an integer equal or larger than 0.')
+
+        self.num_classes = num_classes
+        if use_cosine_similarity:
+            num_classes = dummy_num_classes
 
         if out_channels is None:
             if num_classes == 2:
@@ -121,7 +127,6 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
             threshold = 0.3
             warnings.warn('threshold is not defined for binary, and defaults'
                           'to 0.3')
-        self.num_classes = num_classes
         self.out_channels = out_channels
         self.threshold = threshold
 
@@ -140,17 +145,20 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
         else:
             self.sampler = None
 
-        self.use_cosine_similarity = use_cosine_similarity
-        if not self.use_cosine_similarity:
-            self.conv_seg = nn.Conv2d(channels, self.out_channels, kernel_size=1)
-            if dropout_ratio > 0:
-                self.dropout = nn.Dropout2d(dropout_ratio)
-            else:
-                self.dropout = None
+        self.conv_seg = nn.Conv2d(channels, self.out_channels, kernel_size=1)
+        if dropout_ratio > 0:
+            self.dropout = nn.Dropout2d(dropout_ratio)
         else:
-            self.text_embeddings: torch.Tensor = None
-            self.temperature = temperature
-            self.logit_scale = torch.tensor(1 / self.temperature)
+            self.dropout = None
+
+        self.use_cosine_similarity = use_cosine_similarity
+        if self.use_cosine_similarity:
+            self.text_embeddings = torch.load(text_embeddings)
+            assert self.text_embeddings is not None, \
+                "Failed to load text embeddings."
+            assert self.out_channels == self.text_embeddings.shape[1], \
+                f"Dimensions between output channels ({self.out_channels}) and text embeddings ({self.text_embeddings.shape[1]}) not match."
+            self.logit_scale = torch.tensor(1 / temperature)
 
         self.fp16_enabled = False
 
@@ -271,16 +279,15 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
 
     def cls_seg(self, feat):
         """Classify each pixel."""
-        if not self.use_cosine_similarity:
-            if self.dropout is not None:
-                feat = self.dropout(feat)
-            output = self.conv_seg(feat)
-        else:
+        if self.dropout is not None:
+            feat = self.dropout(feat)
+        output = self.conv_seg(feat)
+
+        if self.use_cosine_similarity:
+            feat = output
             B, C, H, W = feat.shape
-            assert self.text_embeddings is not None, \
-                "Text embedding have not been initialized yet."
-            assert self.text_embeddings.shape[0] == self.out_channels, \
-                "Number of text embedding and classes not match."
+            assert self.text_embeddings.shape[0] == self.num_classes, \
+                f"Number of text embeddings ({self.text_embeddings.shape[0]}) and classes ({self.num_classes}) not match."
             assert self.text_embeddings.shape[1] == C, \
                 f"Dimensions between text embeddings ({self.text_embeddings.shape[1]}) and feature maps ({C}) not match."
 
