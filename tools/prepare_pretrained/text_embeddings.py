@@ -27,11 +27,15 @@ def get_dataset_classes(dataset_cfg):
         type=dataset_cfg['dataset_type'],
         data_root=dataset_cfg['data_root'],
         img_dir=dataset_cfg['img_dir'],
-        ann_dir=dataset_cfg['img_dir'],
+        ann_dir=dataset_cfg['ann_dir'],
         pipeline=train_pipeline
     )
 
     datasets = [build_dataset(cfg)]
+
+    x = datasets[0].prepare_train_img(0)
+    print(x['gt_semantic_seg'])
+
     return list(datasets[0].CLASSES)
 
 
@@ -64,11 +68,18 @@ if __name__ == "__main__":
             img_dir='images/training',
             ann_dir='annotations/training',
             num_class=150,
+        ),
+        camvid=dict(
+            dataset_type='CamVidDataset',
+            data_root='data/CamVid/',
+            img_dir='train',
+            ann_dir='train_labelIds',
+            num_class=11,
         )
     )
 
-    dataset = 'city'
-    model_name = 'RN101'
+    dataset = 'camvid'
+    model_name = 'RN50'
     dataset_cfg = cfg[dataset]
 
     text_embeddings = get_text_embeddings(dataset_cfg, model_name)
@@ -76,6 +87,6 @@ if __name__ == "__main__":
     K, C = text_embeddings.shape
     torch.save(text_embeddings, f"./pretrained/textfeat_{dataset}_{K}_{model_name}_{C}.pth")
 
-    text_embeddings_pca = perform_pca(text_embeddings, dataset_cfg['num_class'])
-    K, C = text_embeddings_pca.shape
-    torch.save(text_embeddings_pca, f"./pretrained/textfeat_{dataset}_{K}_{model_name}_{C}.pth")
+    # text_embeddings_pca = perform_pca(text_embeddings, dataset_cfg['num_class'])
+    # K, C = text_embeddings_pca.shape
+    # torch.save(text_embeddings_pca, f"./pretrained/textfeat_{dataset}_{K}_{model_name}_{C}.pth")
