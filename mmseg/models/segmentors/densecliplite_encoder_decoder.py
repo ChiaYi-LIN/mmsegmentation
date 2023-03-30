@@ -59,7 +59,7 @@ class DenseCLIPLite(BaseSegmentor):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        self.texts = torch.cat([tokenize(c, context_length=self.context_length) for c in self.CLASSES])
+        self.texts = None
         context_length = self.text_encoder.context_length - self.context_length
         self.contexts = nn.Parameter(torch.randn(1, context_length, token_embed_dim))
         nn.init.trunc_normal_(self.contexts)
@@ -89,7 +89,7 @@ class DenseCLIPLite(BaseSegmentor):
         x, score_map = self.get_score_map(x)
         if self.with_neck:
             x = self.neck(x)
-        return x + [score_map]
+        return tuple(list(x) + [score_map])
 
     def encode_decode(self, img, img_metas):
         """Encode images with backbone and decode into a semantic segmentation
@@ -144,12 +144,14 @@ class DenseCLIPLite(BaseSegmentor):
         return seg_logit
 
     def get_score_map(self, x):
-        x_orig = list(x[0:3])
-        visual_embeddings = x[-1]
+        if self.texts is None:
+            self.texts = torch.cat([tokenize(c, context_length=self.context_length) for c in self.CLASSES])
+        x_orig = list(x[0:4])
+        visual_embeddings = x[self.score_concat_index]
 
         B, C, H, W = visual_embeddings.shape
         # (B, K, C)
-        text_embeddings = self.text_encoder(self.texts.to(visual_embeddings.device), self.contexts).expand(B, -1, -1)
+        text_embeddings = self.text_encoder(self.texts.to(self.contexts.device), self.contexts).expand(B, -1, -1)
 
         # compute score map and concat
         B, K, C = text_embeddings.shape
