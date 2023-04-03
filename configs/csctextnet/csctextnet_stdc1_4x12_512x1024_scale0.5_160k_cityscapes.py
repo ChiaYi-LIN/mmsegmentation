@@ -16,7 +16,7 @@ model = dict(
             type='CLIPTextContextEncoder',
             context_length=13,
             encoder_type='RN50',
-            pretrained='/tmp2/linchiayi/mmsegmentation/pretrained/RN50.pt'),
+            pretrained='/tmp3/linchiayi/mmsegmentation/pretrained/RN50.pt'),
         context_mode="CSC",
         CLASSES=None),
     decode_head=dict(
@@ -76,7 +76,7 @@ model = dict(
             sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
-    ],
+    ]
 )
 
 # dataset
