@@ -1,6 +1,6 @@
 import torch
 import clip
-from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
 from mmseg.datasets import build_dataset
 
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         )
     )
 
-    dataset = 'camvid'
+    dataset = 'city'
     model_name = 'RN50'
     dataset_cfg = cfg[dataset]
 
