@@ -15,7 +15,7 @@ from .mscan import MSCAN
 from .resnest import ResNeSt
 from .resnet import ResNet, ResNetV1c, ResNetV1d
 from .resnext import ResNeXt
-from .stdc import STDCContextPathNet, STDCNet
+from .stdc import STDCContextPathNet, STDCNet, STDCTextNet, STDCEnTextNet, STDCContextNet
 from .swin import SwinTransformer
 from .timm_backbone import TIMMBackbone
 from .twins import PCPVT, SVT
@@ -29,5 +29,5 @@ __all__ = [
     'VisionTransformer', 'SwinTransformer', 'MixVisionTransformer',
     'BiSeNetV1', 'BiSeNetV2', 'ICNet', 'TIMMBackbone', 'ERFNet', 'PCPVT',
     'SVT', 'STDCNet', 'STDCContextPathNet', 'BEiT', 'MAE', 'MSCAN',
-    'CLIPTextContextEncoder'
+    'CLIPTextContextEncoder', 'STDCTextNet', 'STDCEnTextNet', 'STDCContextNet'
 ]
