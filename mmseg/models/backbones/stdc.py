@@ -536,7 +536,7 @@ class STDCEnTextNet(BaseModule):
             last_in_channels[0], out_channels, 1, norm_cfg=norm_cfg)
 
         self.ffm = FeatureFusionModule(**ffm_cfg)
-        self.text_embeddings = torch.load(text_embeddings)
+        self.text_embeddings = nn.parameter.Parameter(torch.load(text_embeddings), requires_grad=False)
 
         self.upsample_mode = upsample_mode
         self.align_corners = align_corners
@@ -548,9 +548,10 @@ class STDCEnTextNet(BaseModule):
         feat = outs[-1]
         B, C, H, W = feat.shape
         text_embeddings = self.text_embeddings.unsqueeze(0).expand(B, -1, -1).type(feat.dtype).to(feat.device)
-        feat = nn.functional.normalize(feat, dim=1, p=2)
+        feat = nn.functional.normalize(feat, dim=1, p=2).view(B, C, H * W)
         text_embeddings = nn.functional.normalize(text_embeddings, dim=2, p=2)
-        score_map = torch.einsum('bchw,bkc->bkhw', feat, text_embeddings)
+        score_map = torch.bmm(text_embeddings, feat).view(B, text_embeddings.shape[1], H, W)
+        # score_map = torch.einsum('bchw,bkc->bkhw', feat, text_embeddings)
         outs[-1] = torch.cat([outs[-1], score_map], dim=1)
 
         # Context Path

@@ -10,7 +10,7 @@ model = dict(
         last_in_channels=(1024+19, 512),
         backbone_cfg=dict(
             init_cfg=dict(type='Pretrained', checkpoint=checkpoint)),
-        text_embeddings='./pretrained/textfeat_city_19_RN50_1024.pth'),
+        text_embeddings='/tmp2/linchiayi/mmsegmentation/pretrained/textfeat_city_19_RN50_1024.pth'),
     auxiliary_head=[
         dict(
             type='FCNHead',
