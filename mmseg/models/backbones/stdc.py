@@ -639,7 +639,7 @@ class STDCContextNet(BaseModule):
         feat = outs[-1]
         B, C, H, W = feat.shape
         if self.label_texts is None:
-            self.label_texts = torch.cat([tokenize(c, context_length=self.label_context_length) for c in self.CLASSES])  # n_class, label_context_length
+            self.label_texts = nn.Parameter(torch.cat([tokenize(c, context_length=self.label_context_length) for c in self.CLASSES]), requires_grad=False)  # n_class, label_context_length
         label_texts = self.label_texts.to(feat.device)
         contexts = self.contexts.to(feat.device)
         if contexts.dim() == 2:
