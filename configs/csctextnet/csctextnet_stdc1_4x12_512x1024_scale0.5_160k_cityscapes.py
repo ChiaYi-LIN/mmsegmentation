@@ -20,7 +20,7 @@ model = dict(
         context_mode="CSC",
         CLASSES=None),
     decode_head=dict(
-        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000)),
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000)),
     auxiliary_head=[
         dict(
             type='FCNHead',
@@ -32,7 +32,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -45,7 +45,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -73,7 +73,7 @@ model = dict(
             channels=1,
             num_classes=19,
             in_index=4,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
     ]
@@ -89,6 +89,7 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005,
                  paramwise_cfg=dict(
                     custom_keys={
+                        'backbone': dict(lr_mult=0.1),
                         'text_encoder': dict(lr_mult=0., decay_mult=0.),
                         'norm': dict(decay_mult=0.)}))
 lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
