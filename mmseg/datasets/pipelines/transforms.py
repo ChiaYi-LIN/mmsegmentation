@@ -110,6 +110,7 @@ class Resize(object):
                  img_scale=None,
                  multiscale_mode='range',
                  ratio_range=None,
+                 scale_step_size=None,
                  keep_ratio=True,
                  min_size=None):
         if img_scale is None:
@@ -131,6 +132,7 @@ class Resize(object):
 
         self.multiscale_mode = multiscale_mode
         self.ratio_range = ratio_range
+        self.scale_step_size = scale_step_size
         self.keep_ratio = keep_ratio
         self.min_size = min_size
 
@@ -180,7 +182,7 @@ class Resize(object):
         return img_scale, None
 
     @staticmethod
-    def random_sample_ratio(img_scale, ratio_range):
+    def random_sample_ratio(img_scale, ratio_range, scale_step_size):
         """Randomly sample an img_scale when ``ratio_range`` is specified.
 
         A ratio will be randomly sampled from the range specified by
@@ -202,7 +204,10 @@ class Resize(object):
         assert isinstance(img_scale, tuple) and len(img_scale) == 2
         min_ratio, max_ratio = ratio_range
         assert min_ratio <= max_ratio
-        ratio = np.random.random_sample() * (max_ratio - min_ratio) + min_ratio
+        if scale_step_size is None:
+            ratio = np.random.random_sample() * (max_ratio - min_ratio) + min_ratio
+        else:
+            ratio = np.random.choice(np.arange(min_ratio, max_ratio + 1e-8, scale_step_size))
         scale = int(img_scale[0] * ratio), int(img_scale[1] * ratio)
         return scale, None
 
@@ -228,10 +233,10 @@ class Resize(object):
             if self.img_scale is None:
                 h, w = results['img'].shape[:2]
                 scale, scale_idx = self.random_sample_ratio((w, h),
-                                                            self.ratio_range)
+                                                            self.ratio_range, self.scale_step_size)
             else:
                 scale, scale_idx = self.random_sample_ratio(
-                    self.img_scale[0], self.ratio_range)
+                    self.img_scale[0], self.ratio_range, self.scale_step_size)
         elif len(self.img_scale) == 1:
             scale, scale_idx = self.img_scale[0], 0
         elif self.multiscale_mode == 'range':
