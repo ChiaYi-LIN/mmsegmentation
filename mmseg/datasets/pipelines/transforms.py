@@ -322,6 +322,7 @@ class Resize(object):
         repr_str += (f'(img_scale={self.img_scale}, '
                      f'multiscale_mode={self.multiscale_mode}, '
                      f'ratio_range={self.ratio_range}, '
+                     f'scale_step_size={self.scale_step_size}, '
                      f'keep_ratio={self.keep_ratio})')
         return repr_str
 
