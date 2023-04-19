@@ -8,18 +8,11 @@ checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/s
 norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
     backbone=dict(
-        type='STDCContextNet',
+        type='STDCEnTextNet',
         last_in_channels=(1024+11, 512),
         backbone_cfg=dict(
             init_cfg=dict(type='Pretrained', checkpoint=checkpoint)),
-        textencoder_cfg=dict(
-            type='CLIPTextContextEncoder',
-            context_length=13,
-            encoder_type='RN50',
-            pretrained='/tmp3/linchiayi/mmsegmentation/pretrained/RN50.pt'),
-        context_mode="UC",
-        CLASSES=('Bicyclist', 'Building', 'Car', 'Column_Pole', 'Fence', 'Pedestrian',
-                 'Road', 'Sidewalk', 'SignSymbol', 'Sky', 'Tree')),
+        text_embeddings='/tmp3/linchiayi/mmsegmentation/pretrained/textfeat_camvid_11_RN50_1024.pth'),
     decode_head=dict(
         sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000)),
     auxiliary_head=[
@@ -92,7 +85,6 @@ optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0005,
                     custom_keys={
                         'backbone.backbone': dict(lr_mult=0.1),
                         'backbone.text_encoder': dict(lr_mult=0., decay_mult=0.),
-                        'backbone.contexts': dict(decay_mult=0.),
                         '.bn.': dict(decay_mult=0.)}))
 
 lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
