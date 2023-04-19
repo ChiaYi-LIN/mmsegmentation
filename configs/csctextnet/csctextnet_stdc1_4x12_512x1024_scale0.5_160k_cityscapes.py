@@ -18,7 +18,10 @@ model = dict(
             encoder_type='RN50',
             pretrained='/tmp3/linchiayi/mmsegmentation/pretrained/RN50.pt'),
         context_mode="CSC",
-        CLASSES=None),
+        CLASSES=('road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
+                 'traffic light', 'traffic sign', 'vegetation', 'terrain', 'sky',
+                 'person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
+                 'bicycle')),
     decode_head=dict(
         sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000)),
     auxiliary_head=[
@@ -86,11 +89,13 @@ data = dict(
 )
 
 # schedule
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005,
+optimizer = dict(type='SGD', lr=0.05, momentum=0.9, weight_decay=0.0005,
                  paramwise_cfg=dict(
                     custom_keys={
-                        'backbone': dict(lr_mult=0.1),
-                        'text_encoder': dict(lr_mult=0., decay_mult=0.),
-                        'norm': dict(decay_mult=0.)}))
+                        'backbone.backbone': dict(lr_mult=0.1),
+                        'backbone.text_encoder': dict(lr_mult=0., decay_mult=0.),
+                        'backbone.contexts': dict(decay_mult=0.),
+                        '.bn.': dict(decay_mult=0.)}))
+
 lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
                  warmup='linear', warmup_iters=1000, warmup_ratio=1e-5)
