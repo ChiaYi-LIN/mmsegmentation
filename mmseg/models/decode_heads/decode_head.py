@@ -311,11 +311,12 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
             seg_label = resize(
                 input=seg_label, size=target_size, mode='nearest')
             seg_label = seg_label.long()
-        seg_logit = resize(
-            input=seg_logit,
-            size=seg_label.shape[2:],
-            mode='bilinear',
-            align_corners=self.align_corners)
+        if seg_logit.dim() != 2:
+            seg_logit = resize(
+                input=seg_logit,
+                size=seg_label.shape[2:],
+                mode='bilinear',
+                align_corners=self.align_corners)
         if self.sampler is not None:
             seg_weight = self.sampler.sample(seg_logit, seg_label)
         else:
@@ -340,6 +341,7 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
                     weight=seg_weight,
                     ignore_index=self.ignore_index)
 
-        loss['acc_seg'] = accuracy(
-            seg_logit, seg_label, ignore_index=self.ignore_index)
+        if seg_logit.dim() != 2:
+            loss['acc_seg'] = accuracy(
+                seg_logit, seg_label, ignore_index=self.ignore_index)
         return loss
