@@ -676,5 +676,5 @@ class STDCContextNet(BaseModule):
         # `outs[0]` is outputted for `STDCHead` auxiliary head.
         # Two feature maps of `arms_out` are outputted for auxiliary head.
         # `feat_fuse` is outputted for decoder head.
-        outputs = [outs[0]] + list(arms_out) + [feat_fuse] + [score_map]
+        outputs = [outs[0]] + list(arms_out) + [feat_fuse] + [score_map] + [text_embeddings[0]]
         return tuple(outputs)
