@@ -77,6 +77,14 @@ model = dict(
             sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+        dict(
+            type='IdentityHead',
+            in_channels=11,
+            channels=1,
+            num_classes=11,
+            in_index=5,
+            loss_decode=dict(
+                type='Text2TextContrastiveLoss', loss_weight=1.0, temperature=0.03, text_embeddings='/tmp3/linchiayi/mmsegmentation/pretrained/textfeat_camvid_11_RN50_1024.pth')),
     ]
 )
 

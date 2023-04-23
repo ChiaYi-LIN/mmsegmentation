@@ -19,7 +19,9 @@ model = dict(
             pretrained='/tmp3/linchiayi/mmsegmentation/pretrained/RN50.pt'),
         context_mode="CSC",
         CLASSES=('Bicyclist', 'Building', 'Car', 'Column_Pole', 'Fence', 'Pedestrian',
-                 'Road', 'Sidewalk', 'SignSymbol', 'Sky', 'Tree')),
+                 'Road', 'Sidewalk', 'SignSymbol', 'Sky', 'Tree'),
+        text_embeddings='/tmp3/linchiayi/mmsegmentation/pretrained/textfeat_camvid_11_RN50_1024.pth',
+        total_iters=10000),
     decode_head=dict(
         sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000)),
     auxiliary_head=[
