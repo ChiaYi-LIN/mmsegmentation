@@ -31,6 +31,7 @@ from .stdc_head import STDCHead
 from .uper_head import UPerHead
 from .attnpool_head import AttentionPoolHead
 from .vanilla_head import VanillaHead
+from .identity_head import IdentityHead
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',
@@ -40,5 +41,5 @@ __all__ = [
     'SETRMLAHead', 'DPTHead', 'SETRMLAHead', 'SegmenterMaskTransformerHead',
     'SegformerHead', 'ISAHead', 'STDCHead', 'IterativeDecodeHead',
     'KernelUpdateHead', 'KernelUpdator', 'LightHamHead', 'AttentionPoolHead',
-    'VanillaHead'
+    'VanillaHead', 'IdentityHead'
 ]
