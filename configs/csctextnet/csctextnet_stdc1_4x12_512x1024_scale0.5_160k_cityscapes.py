@@ -23,7 +23,7 @@ model = dict(
                  'person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
                  'bicycle')),
     decode_head=dict(
-        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000)),
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000)),
     auxiliary_head=[
         dict(
             type='FCNHead',
@@ -35,7 +35,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -48,7 +48,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -76,7 +76,7 @@ model = dict(
             channels=1,
             num_classes=19,
             in_index=4,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=130000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=390000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
     ]
