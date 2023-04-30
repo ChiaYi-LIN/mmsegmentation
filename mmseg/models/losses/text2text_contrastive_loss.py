@@ -26,7 +26,7 @@ def t2t_contrastive(text_embeddings_learn: torch.Tensor,
     loss_2 = F.cross_entropy(similarity.T, torch.arange(num_classes).to(similarity.device), reduction=reduction)
     loss = (loss_1 + loss_2) / 2.0
 
-    # loss += F.l1_loss(text_embeddings_learn @ text_embeddings_learn.T, text_embeddings_fix @ text_embeddings_fix.T, reduction=reduction)
+    # loss = F.l1_loss(text_embeddings_learn @ text_embeddings_learn.T, text_embeddings_fix @ text_embeddings_fix.T, reduction=reduction)
 
     return loss
 
