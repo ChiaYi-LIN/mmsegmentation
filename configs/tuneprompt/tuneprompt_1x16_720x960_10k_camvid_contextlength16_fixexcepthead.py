@@ -4,26 +4,23 @@ _base_ = [
 ]
 
 # model
-checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'  # noqa
+checkpoint = './work_dirs/entextnet_stdc1_1x16_720x960_10k_camvid/best.pth'
 norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
+    init_cfg=dict(type='Pretrained', checkpoint=checkpoint),
     backbone=dict(
         type='STDCContextNet',
         last_in_channels=(1024+11, 512),
-        backbone_cfg=dict(
-            init_cfg=dict(type='Pretrained', checkpoint=checkpoint)),
         textencoder_cfg=dict(
             type='CLIPTextContextEncoder',
-            context_length=13,
+            context_length=16,
             encoder_type='RN50',
-            pretrained='/tmp3/linchiayi/mmsegmentation/pretrained/RN50.pt'),
+            pretrained='./pretrained/RN50.pt'),
         context_mode="CSC",
         CLASSES=('Bicyclist', 'Building', 'Car', 'Column_Pole', 'Fence', 'Pedestrian',
-                 'Road', 'Sidewalk', 'SignSymbol', 'Sky', 'Tree'),
-        text_embeddings='/tmp3/linchiayi/mmsegmentation/pretrained/textfeat_camvid_11_RN50_1024.pth',
-        total_iters=10000),
+                 'Road', 'Sidewalk', 'SignSymbol', 'Sky', 'Tree')),
     decode_head=dict(
-        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000)),
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000)),
     auxiliary_head=[
         dict(
             type='FCNHead',
@@ -35,7 +32,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -48,7 +45,7 @@ model = dict(
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -76,7 +73,7 @@ model = dict(
             channels=1,
             num_classes=11,
             in_index=4,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=340000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
     ]
@@ -84,7 +81,7 @@ model = dict(
 
 # dataset
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=16,
     workers_per_gpu=4,
 )
 
@@ -92,8 +89,12 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0005,
                  paramwise_cfg=dict(
                     custom_keys={
-                        'backbone.backbone': dict(lr_mult=0.1),
-                        'backbone.text_encoder': dict(lr_mult=0., decay_mult=0.),
+                        'backbone.backbone': dict(lr_mult=0.),
+                        'backbone.text_encoder': dict(lr_mult=0.),
+                        'backbone.arms': dict(lr_mult=0.),
+                        'backbone.convs': dict(lr_mult=0.),
+                        'backbone.conv_avg': dict(lr_mult=0.),
+                        'backbone.ffm': dict(lr_mult=0.),
                         'backbone.contexts': dict(decay_mult=0.),
                         '.bn.': dict(decay_mult=0.)}))
 

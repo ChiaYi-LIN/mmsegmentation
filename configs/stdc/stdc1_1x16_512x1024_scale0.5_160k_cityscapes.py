@@ -1,26 +1,29 @@
 _base_ = [
-    '../_base_/models/stdc.py', '../_base_/datasets/camvid.py',
-    '../_base_/default_runtime.py', '../_base_/schedules/schedule_10k.py'
+    '../_base_/models/stdc.py', '../_base_/datasets/cityscapes_0.5scale.py',
+    '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
+
+# model
 checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'  # noqa
 norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
     backbone=dict(
-        last_in_channels=(1024, 512),
         backbone_cfg=dict(
             init_cfg=dict(type='Pretrained', checkpoint=checkpoint))),
+    decode_head=dict(
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=520000)),
     auxiliary_head=[
         dict(
             type='FCNHead',
             in_channels=128,
             channels=64,
             num_convs=1,
-            num_classes=11,
+            num_classes=19,
             in_index=2,
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=510000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=520000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -28,12 +31,12 @@ model = dict(
             in_channels=128,
             channels=64,
             num_convs=1,
-            num_classes=11,
+            num_classes=19,
             in_index=1,
             norm_cfg=norm_cfg,
             concat_input=False,
             align_corners=False,
-            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=510000),
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=520000),
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
         dict(
@@ -56,12 +59,20 @@ model = dict(
                 dict(type='DiceLoss', loss_name='loss_dice', loss_weight=1.0)]),
     ]
 )
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005,
-                 paramwise_cfg=dict(
-                    custom_keys={'norm': dict(decay_mult=0.)}))
-lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
-                 warmup='linear', warmup_iters=200, warmup_ratio=1e-5)
+
+# dataset
 data = dict(
-    samples_per_gpu=12,
+    samples_per_gpu=16,
     workers_per_gpu=4,
 )
+
+# schedule
+optimizer = dict(type='SGD', lr=0.05, momentum=0.9, weight_decay=0.0005,
+                 paramwise_cfg=dict(
+                    custom_keys={
+                        'backbone.backbone': dict(lr_mult=0.1),
+                        'backbone.text_encoder': dict(lr_mult=0., decay_mult=0.),
+                        '.bn.': dict(decay_mult=0.)}))
+
+lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
+                 warmup='linear', warmup_iters=1000, warmup_ratio=1e-5)
