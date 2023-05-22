@@ -663,6 +663,7 @@ class CLIPTextContextEncoder(BaseModule):
         self.positional_embedding = nn.Parameter(torch.empty(self.context_length, transformer_width))
         self.ln_final = LayerNorm(transformer_width)
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
+        self.init_weights()
 
     def init_weights(self, pretrained=None):
         pretrained = pretrained or self.pretrained
@@ -684,6 +685,7 @@ class CLIPTextContextEncoder(BaseModule):
             u, w = self.load_state_dict(state_dict, False)
             print(u, w, 'are misaligned params in text encoder')
             assert len(u) == 0, f"Missing keys: {u}"
+            print(f'Successfully loaded {pretrained}')
 
     def build_attention_mask(self):
         # lazily create causal attention mask, with full attention between the vision tokens
