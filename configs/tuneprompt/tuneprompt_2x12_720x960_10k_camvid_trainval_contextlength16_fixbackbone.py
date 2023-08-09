@@ -1,0 +1,1 @@
+_base_ = './tuneprompt_1x12_720x960_10k_camvid_trainval_contextlength16_fixbackbone.py'

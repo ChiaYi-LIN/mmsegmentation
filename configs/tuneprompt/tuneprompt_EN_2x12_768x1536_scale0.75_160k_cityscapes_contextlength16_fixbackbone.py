@@ -1,0 +1,1 @@
+_base_ = './tuneprompt_EN_1x12_768x1536_scale0.75_160k_cityscapes_contextlength16_fixbackbone.py'

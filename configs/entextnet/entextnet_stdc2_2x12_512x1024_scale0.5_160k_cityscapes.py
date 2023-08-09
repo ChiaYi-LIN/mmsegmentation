@@ -1,0 +1,1 @@
+_base_ = './entextnet_stdc2_1x12_512x1024_scale0.5_160k_cityscapes.py'
