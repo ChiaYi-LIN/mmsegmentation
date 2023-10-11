@@ -1,0 +1,866 @@
+2023-05-23 22:01:52,912 - mmseg - INFO - Multi-processing start method is `None`
+2023-05-23 22:01:52,913 - mmseg - INFO - OpenCV num_threads is `96
+2023-05-23 22:01:52,968 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.16 (default, Mar  2 2023, 03:21:46) [GCC 11.2.0]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 3090
+CUDA_HOME: None
+GCC: gcc (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0
+PyTorch: 1.12.1+cu113
+PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.0 Product Build 20191122 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.6.0 (Git Hash 52b5f107dd9cf10910aaa19cb47f3abf9b349815)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.3
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.3.2  (built against CUDA 11.5)
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.3, CUDNN_VERSION=8.3.2, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -fabi-version=11 -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -DEDGE_PROFILER_USE_KINETO -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.12.1, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=OFF, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+TorchVision: 0.13.1+cu113
+OpenCV: 4.7.0
+MMCV: 1.7.0
+MMCV Compiler: GCC 9.3
+MMCV CUDA Compiler: 11.3
+MMSegmentation: 0.30.0+7bf68e5
+------------------------------------------------------------
+
+2023-05-23 22:01:52,968 - mmseg - INFO - Distributed training: False
+2023-05-23 22:01:53,943 - mmseg - INFO - Config:
+norm_cfg = dict(type='BN', requires_grad=True)
+model = dict(
+    type='EncoderDecoder',
+    pretrained=None,
+    backbone=dict(
+        type='STDCContextNet',
+        backbone_cfg=dict(
+            type='STDCNet',
+            stdc_type='STDCNet1',
+            in_channels=3,
+            channels=(32, 64, 256, 512, 1024),
+            bottleneck_type='cat',
+            num_convs=4,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            act_cfg=dict(type='ReLU'),
+            with_final_conv=False),
+        last_in_channels=(1043, 512),
+        out_channels=128,
+        ffm_cfg=dict(in_channels=384, out_channels=256, scale_factor=4),
+        textencoder_cfg=dict(
+            type='CLIPTextContextEncoder',
+            context_length=16,
+            encoder_type='RN50',
+            pretrained='./pretrained/RN50.pt'),
+        context_mode='CSC',
+        CLASSES=('road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
+                 'traffic light', 'traffic sign', 'vegetation', 'terrain',
+                 'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train',
+                 'motorcycle', 'bicycle')),
+    decode_head=dict(
+        type='FCNHead',
+        in_channels=256,
+        channels=256,
+        num_convs=1,
+        num_classes=19,
+        in_index=3,
+        concat_input=False,
+        dropout_ratio=0.1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        align_corners=True,
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=780000),
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+    auxiliary_head=[
+        dict(
+            type='FCNHead',
+            in_channels=128,
+            channels=64,
+            num_convs=1,
+            num_classes=19,
+            in_index=2,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            concat_input=False,
+            align_corners=False,
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=780000),
+            loss_decode=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+        dict(
+            type='FCNHead',
+            in_channels=128,
+            channels=64,
+            num_convs=1,
+            num_classes=19,
+            in_index=1,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            concat_input=False,
+            align_corners=False,
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=780000),
+            loss_decode=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+        dict(
+            type='STDCHead',
+            in_channels=256,
+            channels=64,
+            num_convs=1,
+            num_classes=2,
+            boundary_threshold=0.1,
+            in_index=0,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            concat_input=False,
+            align_corners=True,
+            loss_decode=[
+                dict(
+                    type='CrossEntropyLoss',
+                    loss_name='loss_ce',
+                    use_sigmoid=True,
+                    loss_weight=1.0),
+                dict(type='DiceLoss', loss_name='loss_dice', loss_weight=1.0)
+            ]),
+        dict(
+            type='VanillaHead',
+            temperature=0.07,
+            in_channels=19,
+            channels=1,
+            num_classes=19,
+            in_index=4,
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=780000),
+            loss_decode=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0))
+    ],
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'),
+    init_cfg=dict(
+        type='Pretrained',
+        checkpoint=
+        './work_dirs/tuneprompt_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16_fixbackbone/latest.pth'
+    ))
+dataset_type = 'CityscapesDataset'
+data_root = 'data/cityscapes/'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+crop_size = (512, 1024)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(
+        type='Resize',
+        img_scale=(2048, 1024),
+        ratio_range=(0.125, 1.5),
+        scale_step_size=0.125),
+    dict(type='RandomCrop', crop_size=(512, 1024), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
+    dict(
+        type='Normalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
+    dict(type='Pad', size=(512, 1024), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1024, 512),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=24,
+    workers_per_gpu=4,
+    train=dict(
+        type='CityscapesDataset',
+        data_root='data/cityscapes/',
+        img_dir='leftImg8bit/train',
+        ann_dir='gtFine/train',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(
+                type='Resize',
+                img_scale=(2048, 1024),
+                ratio_range=(0.125, 1.5),
+                scale_step_size=0.125),
+            dict(type='RandomCrop', crop_size=(512, 1024), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PhotoMetricDistortion'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='Pad', size=(512, 1024), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='CityscapesDataset',
+        data_root='data/cityscapes/',
+        img_dir='leftImg8bit/val',
+        ann_dir='gtFine/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1024, 512),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='CityscapesDataset',
+        data_root='data/cityscapes/',
+        img_dir='leftImg8bit/val',
+        ann_dir='gtFine/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1024, 512),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+cudnn_benchmark = True
+optimizer = dict(
+    type='SGD',
+    lr=0.001,
+    momentum=0.9,
+    weight_decay=0.0005,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            {
+                'backbone.backbone': dict(lr_mult=0.1),
+                'backbone.text_encoder': dict(lr_mult=0.0, decay_mult=0.0),
+                'backbone.contexts': dict(lr_mult=0.1, decay_mult=0.0),
+                '.bn.': dict(decay_mult=0.0)
+            })))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=1000,
+    warmup_ratio=1e-05)
+runner = dict(type='IterBasedRunner', max_iters=60000)
+checkpoint_config = dict(by_epoch=False, interval=1500)
+evaluation = dict(
+    interval=1500, metric='mIoU', pre_eval=True, save_best='mIoU')
+checkpoint = './work_dirs/tuneprompt_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16_fixbackbone/latest.pth'
+work_dir = './work_dirs/tuneprompt_stage3_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16'
+gpu_ids = [0]
+auto_resume = False
+
+2023-05-23 22:01:53,944 - mmseg - INFO - Set random seed to 1926731403, deterministic: False
+2023-05-23 22:01:53,996 - mmseg - INFO - Loaded 2975 images
+2023-05-23 22:01:58,155 - mmseg - INFO - initialize EncoderDecoder with init_cfg {'type': 'Pretrained', 'checkpoint': './work_dirs/tuneprompt_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16_fixbackbone/latest.pth'}
+2023-05-23 22:02:05,892 - mmseg - INFO - EncoderDecoder(
+  (backbone): STDCContextNet(
+    (backbone): STDCNet(
+      (stages): ModuleList(
+        (0): ConvModule(
+          (conv): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (1): ConvModule(
+          (conv): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (2): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=128, bias=False)
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+        (3): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=256, bias=False)
+              (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+        (4): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=512, bias=False)
+              (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+    )
+    (text_encoder): CLIPTextContextEncoder(
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+        )
+      )
+      (token_embedding): Embedding(49408, 512)
+      (ln_final): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+    )
+    init_cfg={'type': 'Pretrained', 'checkpoint': './pretrained/RN50.pt'}
+    (arms): ModuleList(
+      (0): AttentionRefinementModule(
+        (conv_layer): ConvModule(
+          (conv): Conv2d(1043, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (atten_conv_layer): Sequential(
+          (0): AdaptiveAvgPool2d(output_size=(1, 1))
+          (1): ConvModule(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (2): Sigmoid()
+        )
+      )
+      (1): AttentionRefinementModule(
+        (conv_layer): ConvModule(
+          (conv): Conv2d(512, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (atten_conv_layer): Sequential(
+          (0): AdaptiveAvgPool2d(output_size=(1, 1))
+          (1): ConvModule(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (2): Sigmoid()
+        )
+      )
+    )
+    (convs): ModuleList(
+      (0): ConvModule(
+        (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+      (1): ConvModule(
+        (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+    )
+    (conv_avg): ConvModule(
+      (conv): Conv2d(1043, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (activate): ReLU(inplace=True)
+    )
+    (ffm): FeatureFusionModule(
+      (conv0): ConvModule(
+        (conv): Conv2d(384, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+      (attention): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=(1, 1))
+        (1): ConvModule(
+          (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (activate): ReLU(inplace=True)
+        )
+        (2): ConvModule(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        )
+        (3): Sigmoid()
+      )
+    )
+  )
+  (decode_head): FCNHead(
+    input_transform=None, ignore_index=255, align_corners=True
+    (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+    (conv_seg): Conv2d(256, 19, kernel_size=(1, 1), stride=(1, 1))
+    (dropout): Dropout2d(p=0.1, inplace=False)
+    (convs): Sequential(
+      (0): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+    )
+  )
+  init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+  (auxiliary_head): ModuleList(
+    (0): FCNHead(
+      input_transform=None, ignore_index=255, align_corners=False
+      (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+      (conv_seg): Conv2d(64, 19, kernel_size=(1, 1), stride=(1, 1))
+      (dropout): Dropout2d(p=0.1, inplace=False)
+      (convs): Sequential(
+        (0): ConvModule(
+          (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+      )
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+    (1): FCNHead(
+      input_transform=None, ignore_index=255, align_corners=False
+      (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+      (conv_seg): Conv2d(64, 19, kernel_size=(1, 1), stride=(1, 1))
+      (dropout): Dropout2d(p=0.1, inplace=False)
+      (convs): Sequential(
+        (0): ConvModule(
+          (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+      )
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+    (2): STDCHead(
+      input_transform=None, ignore_index=255, align_corners=True
+      (loss_decode): ModuleList(
+        (0): CrossEntropyLoss(avg_non_ignore=False)
+        (1): DiceLoss()
+      )
+      (conv_seg): Conv2d(64, 2, kernel_size=(1, 1), stride=(1, 1))
+      (dropout): Dropout2d(p=0.1, inplace=False)
+      (convs): Sequential(
+        (0): ConvModule(
+          (conv): Conv2d(256, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+      )
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+    (3): VanillaHead(
+      input_transform=None, ignore_index=255, align_corners=False
+      (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+      (conv_seg): None
+      (dropout): Dropout2d(p=0.1, inplace=False)
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+  )
+)
+init_cfg={'type': 'Pretrained', 'checkpoint': './work_dirs/tuneprompt_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16_fixbackbone/latest.pth'}
+2023-05-23 22:02:06,036 - mmseg - INFO - Loaded 500 images
+2023-05-23 22:02:06,036 - mmseg - INFO - Start running, host: linchiayi@cml9, work_dir: /tmp2/linchiayi/mmsegmentation/work_dirs/tuneprompt_stage3_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16
+2023-05-23 22:02:06,036 - mmseg - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2023-05-23 22:02:06,038 - mmseg - INFO - workflow: [('train', 1)], max: 60000 iters
+2023-05-23 22:02:06,038 - mmseg - INFO - Checkpoints will be saved to /tmp2/linchiayi/mmsegmentation/work_dirs/tuneprompt_stage3_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16 by HardDiskBackend.
+2023-05-23 22:03:53,588 - mmseg - INFO - Iter [50/60000]	lr: 4.897e-05, eta: 1 day, 11:42:42, time: 2.144, data_time: 0.742, memory: 19944, decode.loss_ce: 0.0735, decode.acc_seg: 96.4563, aux_0.loss_ce: 0.0771, aux_0.acc_seg: 96.3123, aux_1.loss_ce: 0.0936, aux_1.acc_seg: 95.5172, aux_2.loss_ce: 0.0887, aux_2.loss_dice: 0.2323, aux_2.acc_seg: 97.2561, aux_3.loss_ce: 0.1303, aux_3.acc_seg: 94.0675, loss: 0.6955
+2023-05-23 22:04:56,610 - mmseg - INFO - Iter [100/60000]	lr: 9.886e-05, eta: 1 day, 4:19:41, time: 1.261, data_time: 0.073, memory: 19944, decode.loss_ce: 0.0733, decode.acc_seg: 96.4907, aux_0.loss_ce: 0.0768, aux_0.acc_seg: 96.3583, aux_1.loss_ce: 0.0922, aux_1.acc_seg: 95.6130, aux_2.loss_ce: 0.0863, aux_2.loss_dice: 0.2302, aux_2.acc_seg: 97.3478, aux_3.loss_ce: 0.1272, aux_3.acc_seg: 94.2005, loss: 0.6860
+2023-05-23 22:06:04,646 - mmseg - INFO - Iter [150/60000]	lr: 1.487e-04, eta: 1 day, 2:24:33, time: 1.361, data_time: 0.178, memory: 19944, decode.loss_ce: 0.0711, decode.acc_seg: 96.5116, aux_0.loss_ce: 0.0747, aux_0.acc_seg: 96.3707, aux_1.loss_ce: 0.0907, aux_1.acc_seg: 95.5839, aux_2.loss_ce: 0.0873, aux_2.loss_dice: 0.2289, aux_2.acc_seg: 97.2972, aux_3.loss_ce: 0.1256, aux_3.acc_seg: 94.1475, loss: 0.6782
+2023-05-23 22:07:07,189 - mmseg - INFO - Iter [200/60000]	lr: 1.984e-04, eta: 1 day, 0:59:07, time: 1.251, data_time: 0.074, memory: 19944, decode.loss_ce: 0.0716, decode.acc_seg: 96.5396, aux_0.loss_ce: 0.0754, aux_0.acc_seg: 96.4033, aux_1.loss_ce: 0.0923, aux_1.acc_seg: 95.6027, aux_2.loss_ce: 0.0878, aux_2.loss_dice: 0.2304, aux_2.acc_seg: 97.2783, aux_3.loss_ce: 0.1279, aux_3.acc_seg: 94.1654, loss: 0.6855
+2023-05-23 22:08:15,561 - mmseg - INFO - Iter [250/60000]	lr: 2.481e-04, eta: 1 day, 0:30:38, time: 1.367, data_time: 0.179, memory: 19944, decode.loss_ce: 0.0721, decode.acc_seg: 96.5403, aux_0.loss_ce: 0.0758, aux_0.acc_seg: 96.4091, aux_1.loss_ce: 0.0918, aux_1.acc_seg: 95.6334, aux_2.loss_ce: 0.0879, aux_2.loss_dice: 0.2319, aux_2.acc_seg: 97.2730, aux_3.loss_ce: 0.1270, aux_3.acc_seg: 94.2325, loss: 0.6865
+2023-05-23 22:09:18,741 - mmseg - INFO - Iter [300/60000]	lr: 2.977e-04, eta: 23:54:01, time: 1.263, data_time: 0.071, memory: 19944, decode.loss_ce: 0.0717, decode.acc_seg: 96.4540, aux_0.loss_ce: 0.0751, aux_0.acc_seg: 96.3167, aux_1.loss_ce: 0.0908, aux_1.acc_seg: 95.5372, aux_2.loss_ce: 0.0849, aux_2.loss_dice: 0.2277, aux_2.acc_seg: 97.3805, aux_3.loss_ce: 0.1250, aux_3.acc_seg: 94.1239, loss: 0.6752
+2023-05-23 22:10:21,186 - mmseg - INFO - Iter [350/60000]	lr: 3.472e-04, eta: 23:25:31, time: 1.249, data_time: 0.070, memory: 19944, decode.loss_ce: 0.0719, decode.acc_seg: 96.5419, aux_0.loss_ce: 0.0755, aux_0.acc_seg: 96.4041, aux_1.loss_ce: 0.0914, aux_1.acc_seg: 95.6354, aux_2.loss_ce: 0.0875, aux_2.loss_dice: 0.2322, aux_2.acc_seg: 97.3052, aux_3.loss_ce: 0.1264, aux_3.acc_seg: 94.2372, loss: 0.6849
+2023-05-23 22:11:29,458 - mmseg - INFO - Iter [400/60000]	lr: 3.966e-04, eta: 23:18:20, time: 1.365, data_time: 0.179, memory: 19944, decode.loss_ce: 0.0729, decode.acc_seg: 96.4586, aux_0.loss_ce: 0.0764, aux_0.acc_seg: 96.3254, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.5221, aux_2.loss_ce: 0.0873, aux_2.loss_dice: 0.2295, aux_2.acc_seg: 97.2998, aux_3.loss_ce: 0.1285, aux_3.acc_seg: 94.0894, loss: 0.6874
+2023-05-23 22:12:31,922 - mmseg - INFO - Iter [450/60000]	lr: 4.460e-04, eta: 22:59:41, time: 1.249, data_time: 0.068, memory: 19944, decode.loss_ce: 0.0720, decode.acc_seg: 96.5311, aux_0.loss_ce: 0.0757, aux_0.acc_seg: 96.3880, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.6104, aux_2.loss_ce: 0.0877, aux_2.loss_dice: 0.2303, aux_2.acc_seg: 97.2992, aux_3.loss_ce: 0.1263, aux_3.acc_seg: 94.2247, loss: 0.6835
+2023-05-23 22:13:38,939 - mmseg - INFO - Iter [500/60000]	lr: 4.953e-04, eta: 22:53:35, time: 1.340, data_time: 0.178, memory: 19944, decode.loss_ce: 0.0716, decode.acc_seg: 96.4571, aux_0.loss_ce: 0.0751, aux_0.acc_seg: 96.3189, aux_1.loss_ce: 0.0909, aux_1.acc_seg: 95.5347, aux_2.loss_ce: 0.0869, aux_2.loss_dice: 0.2301, aux_2.acc_seg: 97.3202, aux_3.loss_ce: 0.1250, aux_3.acc_seg: 94.1173, loss: 0.6795
+2023-05-23 22:14:42,040 - mmseg - INFO - Iter [550/60000]	lr: 5.445e-04, eta: 22:41:20, time: 1.262, data_time: 0.077, memory: 19944, decode.loss_ce: 0.0736, decode.acc_seg: 96.5060, aux_0.loss_ce: 0.0772, aux_0.acc_seg: 96.3697, aux_1.loss_ce: 0.0937, aux_1.acc_seg: 95.5772, aux_2.loss_ce: 0.0887, aux_2.loss_dice: 0.2324, aux_2.acc_seg: 97.2757, aux_3.loss_ce: 0.1281, aux_3.acc_seg: 94.2195, loss: 0.6937
+2023-05-23 22:15:44,908 - mmseg - INFO - Iter [600/60000]	lr: 5.936e-04, eta: 22:30:35, time: 1.258, data_time: 0.074, memory: 19944, decode.loss_ce: 0.0715, decode.acc_seg: 96.5200, aux_0.loss_ce: 0.0751, aux_0.acc_seg: 96.3777, aux_1.loss_ce: 0.0908, aux_1.acc_seg: 95.6020, aux_2.loss_ce: 0.0864, aux_2.loss_dice: 0.2294, aux_2.acc_seg: 97.3257, aux_3.loss_ce: 0.1240, aux_3.acc_seg: 94.2404, loss: 0.6772
+2023-05-23 22:16:53,754 - mmseg - INFO - Iter [650/60000]	lr: 6.427e-04, eta: 22:30:24, time: 1.377, data_time: 0.193, memory: 19944, decode.loss_ce: 0.0713, decode.acc_seg: 96.5841, aux_0.loss_ce: 0.0746, aux_0.acc_seg: 96.4552, aux_1.loss_ce: 0.0902, aux_1.acc_seg: 95.6932, aux_2.loss_ce: 0.0864, aux_2.loss_dice: 0.2296, aux_2.acc_seg: 97.3488, aux_3.loss_ce: 0.1234, aux_3.acc_seg: 94.3695, loss: 0.6755
+2023-05-23 22:17:57,763 - mmseg - INFO - Iter [700/60000]	lr: 6.917e-04, eta: 22:23:16, time: 1.280, data_time: 0.085, memory: 19944, decode.loss_ce: 0.0714, decode.acc_seg: 96.5711, aux_0.loss_ce: 0.0748, aux_0.acc_seg: 96.4361, aux_1.loss_ce: 0.0907, aux_1.acc_seg: 95.6637, aux_2.loss_ce: 0.0871, aux_2.loss_dice: 0.2313, aux_2.acc_seg: 97.3116, aux_3.loss_ce: 0.1244, aux_3.acc_seg: 94.3079, loss: 0.6797
+2023-05-23 22:19:07,577 - mmseg - INFO - Iter [750/60000]	lr: 7.406e-04, eta: 22:24:35, time: 1.396, data_time: 0.201, memory: 19944, decode.loss_ce: 0.0696, decode.acc_seg: 96.5889, aux_0.loss_ce: 0.0731, aux_0.acc_seg: 96.4451, aux_1.loss_ce: 0.0893, aux_1.acc_seg: 95.6545, aux_2.loss_ce: 0.0858, aux_2.loss_dice: 0.2281, aux_2.acc_seg: 97.3424, aux_3.loss_ce: 0.1225, aux_3.acc_seg: 94.2829, loss: 0.6684
+2023-05-23 22:20:11,863 - mmseg - INFO - Iter [800/60000]	lr: 7.894e-04, eta: 22:18:45, time: 1.286, data_time: 0.084, memory: 19944, decode.loss_ce: 0.0720, decode.acc_seg: 96.5519, aux_0.loss_ce: 0.0757, aux_0.acc_seg: 96.4116, aux_1.loss_ce: 0.0917, aux_1.acc_seg: 95.6338, aux_2.loss_ce: 0.0873, aux_2.loss_dice: 0.2310, aux_2.acc_seg: 97.2964, aux_3.loss_ce: 0.1253, aux_3.acc_seg: 94.2806, loss: 0.6829
+2023-05-23 22:21:15,883 - mmseg - INFO - Iter [850/60000]	lr: 8.382e-04, eta: 22:13:11, time: 1.280, data_time: 0.082, memory: 19944, decode.loss_ce: 0.0703, decode.acc_seg: 96.4909, aux_0.loss_ce: 0.0739, aux_0.acc_seg: 96.3475, aux_1.loss_ce: 0.0902, aux_1.acc_seg: 95.5676, aux_2.loss_ce: 0.0852, aux_2.loss_dice: 0.2254, aux_2.acc_seg: 97.3619, aux_3.loss_ce: 0.1228, aux_3.acc_seg: 94.1886, loss: 0.6678
+2023-05-23 22:22:25,245 - mmseg - INFO - Iter [900/60000]	lr: 8.869e-04, eta: 22:13:59, time: 1.387, data_time: 0.192, memory: 19944, decode.loss_ce: 0.0738, decode.acc_seg: 96.4943, aux_0.loss_ce: 0.0774, aux_0.acc_seg: 96.3608, aux_1.loss_ce: 0.0938, aux_1.acc_seg: 95.5721, aux_2.loss_ce: 0.0887, aux_2.loss_dice: 0.2324, aux_2.acc_seg: 97.2509, aux_3.loss_ce: 0.1277, aux_3.acc_seg: 94.2032, loss: 0.6936
+2023-05-23 22:23:29,393 - mmseg - INFO - Iter [950/60000]	lr: 9.355e-04, eta: 22:09:10, time: 1.283, data_time: 0.080, memory: 19944, decode.loss_ce: 0.0702, decode.acc_seg: 96.5571, aux_0.loss_ce: 0.0736, aux_0.acc_seg: 96.4312, aux_1.loss_ce: 0.0892, aux_1.acc_seg: 95.6603, aux_2.loss_ce: 0.0855, aux_2.loss_dice: 0.2285, aux_2.acc_seg: 97.3517, aux_3.loss_ce: 0.1209, aux_3.acc_seg: 94.3649, loss: 0.6680
+2023-05-23 22:24:39,788 - mmseg - INFO - Exp name: tuneprompt_stage3_EN_1x24_512x1024_scale0.5_60k_cityscapes_contextlength16.py
+2023-05-23 22:24:39,789 - mmseg - INFO - Iter [1000/60000]	lr: 9.840e-04, eta: 22:10:51, time: 1.408, data_time: 0.202, memory: 19944, decode.loss_ce: 0.0726, decode.acc_seg: 96.5192, aux_0.loss_ce: 0.0762, aux_0.acc_seg: 96.3873, aux_1.loss_ce: 0.0919, aux_1.acc_seg: 95.6279, aux_2.loss_ce: 0.0870, aux_2.loss_dice: 0.2306, aux_2.acc_seg: 97.3212, aux_3.loss_ce: 0.1239, aux_3.acc_seg: 94.3297, loss: 0.6821
+2023-05-23 22:25:43,535 - mmseg - INFO - Iter [1050/60000]	lr: 9.843e-04, eta: 22:06:03, time: 1.275, data_time: 0.081, memory: 19944, decode.loss_ce: 0.0708, decode.acc_seg: 96.5845, aux_0.loss_ce: 0.0743, aux_0.acc_seg: 96.4505, aux_1.loss_ce: 0.0904, aux_1.acc_seg: 95.6642, aux_2.loss_ce: 0.0874, aux_2.loss_dice: 0.2322, aux_2.acc_seg: 97.3039, aux_3.loss_ce: 0.1231, aux_3.acc_seg: 94.3511, loss: 0.6782
+2023-05-23 22:26:48,248 - mmseg - INFO - Iter [1100/60000]	lr: 9.835e-04, eta: 22:02:27, time: 1.294, data_time: 0.087, memory: 19944, decode.loss_ce: 0.0711, decode.acc_seg: 96.5031, aux_0.loss_ce: 0.0746, aux_0.acc_seg: 96.3671, aux_1.loss_ce: 0.0905, aux_1.acc_seg: 95.5827, aux_2.loss_ce: 0.0854, aux_2.loss_dice: 0.2266, aux_2.acc_seg: 97.3532, aux_3.loss_ce: 0.1221, aux_3.acc_seg: 94.2754, loss: 0.6703
+2023-05-23 22:27:56,493 - mmseg - INFO - Iter [1150/60000]	lr: 9.828e-04, eta: 22:02:05, time: 1.365, data_time: 0.184, memory: 19944, decode.loss_ce: 0.0713, decode.acc_seg: 96.5151, aux_0.loss_ce: 0.0749, aux_0.acc_seg: 96.3713, aux_1.loss_ce: 0.0910, aux_1.acc_seg: 95.5775, aux_2.loss_ce: 0.0860, aux_2.loss_dice: 0.2281, aux_2.acc_seg: 97.3306, aux_3.loss_ce: 0.1231, aux_3.acc_seg: 94.2847, loss: 0.6744
+2023-05-23 22:28:59,144 - mmseg - INFO - Iter [1200/60000]	lr: 9.820e-04, eta: 21:57:05, time: 1.253, data_time: 0.072, memory: 19944, decode.loss_ce: 0.0722, decode.acc_seg: 96.4644, aux_0.loss_ce: 0.0758, aux_0.acc_seg: 96.3240, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.5387, aux_2.loss_ce: 0.0865, aux_2.loss_dice: 0.2294, aux_2.acc_seg: 97.3308, aux_3.loss_ce: 0.1244, aux_3.acc_seg: 94.2077, loss: 0.6801
+2023-05-23 22:30:08,142 - mmseg - INFO - Iter [1250/60000]	lr: 9.813e-04, eta: 21:57:23, time: 1.380, data_time: 0.188, memory: 19944, decode.loss_ce: 0.0731, decode.acc_seg: 96.4703, aux_0.loss_ce: 0.0769, aux_0.acc_seg: 96.3261, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.5424, aux_2.loss_ce: 0.0867, aux_2.loss_dice: 0.2300, aux_2.acc_seg: 97.3379, aux_3.loss_ce: 0.1251, aux_3.acc_seg: 94.2394, loss: 0.6845
+2023-05-23 22:31:11,796 - mmseg - INFO - Iter [1300/60000]	lr: 9.805e-04, eta: 21:53:32, time: 1.273, data_time: 0.079, memory: 19944, decode.loss_ce: 0.0728, decode.acc_seg: 96.4563, aux_0.loss_ce: 0.0763, aux_0.acc_seg: 96.3188, aux_1.loss_ce: 0.0922, aux_1.acc_seg: 95.5386, aux_2.loss_ce: 0.0875, aux_2.loss_dice: 0.2303, aux_2.acc_seg: 97.2953, aux_3.loss_ce: 0.1242, aux_3.acc_seg: 94.2270, loss: 0.6834
+2023-05-23 22:32:14,312 - mmseg - INFO - Iter [1350/60000]	lr: 9.798e-04, eta: 21:49:04, time: 1.250, data_time: 0.071, memory: 19944, decode.loss_ce: 0.0718, decode.acc_seg: 96.5361, aux_0.loss_ce: 0.0754, aux_0.acc_seg: 96.4014, aux_1.loss_ce: 0.0913, aux_1.acc_seg: 95.6149, aux_2.loss_ce: 0.0881, aux_2.loss_dice: 0.2315, aux_2.acc_seg: 97.2919, aux_3.loss_ce: 0.1236, aux_3.acc_seg: 94.3072, loss: 0.6816
+2023-05-23 22:33:22,863 - mmseg - INFO - Iter [1400/60000]	lr: 9.790e-04, eta: 21:49:04, time: 1.371, data_time: 0.181, memory: 19944, decode.loss_ce: 0.0696, decode.acc_seg: 96.5682, aux_0.loss_ce: 0.0729, aux_0.acc_seg: 96.4399, aux_1.loss_ce: 0.0887, aux_1.acc_seg: 95.6639, aux_2.loss_ce: 0.0854, aux_2.loss_dice: 0.2281, aux_2.acc_seg: 97.3738, aux_3.loss_ce: 0.1198, aux_3.acc_seg: 94.3702, loss: 0.6645
+2023-05-23 22:34:25,635 - mmseg - INFO - Iter [1450/60000]	lr: 9.783e-04, eta: 21:45:05, time: 1.255, data_time: 0.075, memory: 19944, decode.loss_ce: 0.0743, decode.acc_seg: 96.4753, aux_0.loss_ce: 0.0782, aux_0.acc_seg: 96.3344, aux_1.loss_ce: 0.0947, aux_1.acc_seg: 95.5529, aux_2.loss_ce: 0.0889, aux_2.loss_dice: 0.2334, aux_2.acc_seg: 97.2622, aux_3.loss_ce: 0.1270, aux_3.acc_seg: 94.2749, loss: 0.6965

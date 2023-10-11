@@ -1,0 +1,30 @@
+{
+    "config": "configs/entextnet/entextnet_stdc1_1x16_720x960_10k_camvid.py",
+    "metric": {
+        "aAcc": 0.9383,
+        "mIoU": 0.7173,
+        "mAcc": 0.7818999999999999,
+        "IoU.Bicyclist": 0.6963999938964843,
+        "IoU.Building": 0.89,
+        "IoU.Car": 0.923499984741211,
+        "IoU.Column_Pole": 0.3465999984741211,
+        "IoU.Fence": 0.5388999938964844,
+        "IoU.Pedestrian": 0.6923000335693359,
+        "IoU.Road": 0.955,
+        "IoU.Sidewalk": 0.8748000335693359,
+        "IoU.SignSymbol": 0.25079999923706053,
+        "IoU.Sky": 0.9191999816894532,
+        "IoU.Tree": 0.8030999755859375,
+        "Acc.Bicyclist": 0.8201999664306641,
+        "Acc.Building": 0.9551999664306641,
+        "Acc.Car": 0.955,
+        "Acc.Column_Pole": 0.44470001220703126,
+        "Acc.Fence": 0.5843000030517578,
+        "Acc.Pedestrian": 0.7812999725341797,
+        "Acc.Road": 0.9801999664306641,
+        "Acc.Sidewalk": 0.9323000335693359,
+        "Acc.SignSymbol": 0.29219999313354494,
+        "Acc.Sky": 0.9573000335693359,
+        "Acc.Tree": 0.8987000274658203
+    }
+}

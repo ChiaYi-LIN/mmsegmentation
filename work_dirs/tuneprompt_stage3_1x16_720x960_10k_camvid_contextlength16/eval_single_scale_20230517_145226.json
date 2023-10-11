@@ -1,0 +1,30 @@
+{
+    "config": "configs/tuneprompt/tuneprompt_stage3_1x16_720x960_10k_camvid_contextlength16.py",
+    "metric": {
+        "aAcc": 0.9423,
+        "mIoU": 0.7273000000000001,
+        "mAcc": 0.7905,
+        "IoU.Bicyclist": 0.6866999816894531,
+        "IoU.Building": 0.8961000061035156,
+        "IoU.Car": 0.9311000061035156,
+        "IoU.Column_Pole": 0.37290000915527344,
+        "IoU.Fence": 0.5181000137329101,
+        "IoU.Pedestrian": 0.6916000366210937,
+        "IoU.Road": 0.965,
+        "IoU.Sidewalk": 0.8987999725341796,
+        "IoU.SignSymbol": 0.3185000038146973,
+        "IoU.Sky": 0.9198000335693359,
+        "IoU.Tree": 0.8022000122070313,
+        "Acc.Bicyclist": 0.7512999725341797,
+        "Acc.Building": 0.9508000183105468,
+        "Acc.Car": 0.9620999908447265,
+        "Acc.Column_Pole": 0.4754999923706055,
+        "Acc.Fence": 0.5572000122070313,
+        "Acc.Pedestrian": 0.8591000366210938,
+        "Acc.Road": 0.9816999816894532,
+        "Acc.Sidewalk": 0.9580999755859375,
+        "Acc.SignSymbol": 0.33549999237060546,
+        "Acc.Sky": 0.959800033569336,
+        "Acc.Tree": 0.9041000366210937
+    }
+}

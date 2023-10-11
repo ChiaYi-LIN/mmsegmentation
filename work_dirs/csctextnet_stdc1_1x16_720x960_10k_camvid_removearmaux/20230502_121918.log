@@ -1,0 +1,2087 @@
+2023-05-02 12:19:18,273 - mmseg - INFO - Multi-processing start method is `None`
+2023-05-02 12:19:18,275 - mmseg - INFO - OpenCV num_threads is `96
+2023-05-02 12:19:18,350 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.16 (default, Mar  2 2023, 03:21:46) [GCC 11.2.0]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 3090
+CUDA_HOME: None
+GCC: gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0
+PyTorch: 1.12.1+cu113
+PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.0 Product Build 20191122 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.6.0 (Git Hash 52b5f107dd9cf10910aaa19cb47f3abf9b349815)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.3
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.3.2  (built against CUDA 11.5)
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.3, CUDNN_VERSION=8.3.2, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -fabi-version=11 -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -DEDGE_PROFILER_USE_KINETO -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.12.1, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=OFF, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+TorchVision: 0.13.1+cu113
+OpenCV: 4.7.0
+MMCV: 1.7.0
+MMCV Compiler: GCC 9.3
+MMCV CUDA Compiler: 11.3
+MMSegmentation: 0.30.0+e7ed570
+------------------------------------------------------------
+
+2023-05-02 12:19:18,351 - mmseg - INFO - Distributed training: False
+2023-05-02 12:19:19,313 - mmseg - INFO - Config:
+norm_cfg = dict(type='BN', requires_grad=True)
+model = dict(
+    type='EncoderDecoder',
+    pretrained=None,
+    backbone=dict(
+        type='STDCContextNet',
+        backbone_cfg=dict(
+            type='STDCNet',
+            stdc_type='STDCNet1',
+            in_channels=3,
+            channels=(32, 64, 256, 512, 1024),
+            bottleneck_type='cat',
+            num_convs=4,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            act_cfg=dict(type='ReLU'),
+            with_final_conv=False,
+            init_cfg=dict(
+                type='Pretrained',
+                checkpoint=
+                'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'
+            )),
+        last_in_channels=(1035, 512),
+        out_channels=128,
+        ffm_cfg=dict(in_channels=384, out_channels=256, scale_factor=4),
+        textencoder_cfg=dict(
+            type='CLIPTextContextEncoder',
+            context_length=13,
+            encoder_type='RN50',
+            pretrained='./pretrained/RN50.pt'),
+        context_mode='CSC',
+        CLASSES=('Bicyclist', 'Building', 'Car', 'Column_Pole', 'Fence',
+                 'Pedestrian', 'Road', 'Sidewalk', 'SignSymbol', 'Sky',
+                 'Tree')),
+    decode_head=dict(
+        type='FCNHead',
+        in_channels=256,
+        channels=256,
+        num_convs=1,
+        num_classes=19,
+        in_index=3,
+        concat_input=False,
+        dropout_ratio=0.1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        align_corners=True,
+        sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000),
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+    auxiliary_head=[
+        dict(
+            type='STDCHead',
+            in_channels=256,
+            channels=64,
+            num_convs=1,
+            num_classes=2,
+            boundary_threshold=0.1,
+            in_index=0,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            concat_input=False,
+            align_corners=True,
+            loss_decode=[
+                dict(
+                    type='CrossEntropyLoss',
+                    loss_name='loss_ce',
+                    use_sigmoid=True,
+                    loss_weight=1.0),
+                dict(type='DiceLoss', loss_name='loss_dice', loss_weight=1.0)
+            ]),
+        dict(
+            type='VanillaHead',
+            temperature=0.07,
+            in_channels=11,
+            channels=1,
+            num_classes=11,
+            in_index=4,
+            sampler=dict(type='OHEMPixelSampler', thresh=0.7, min_kept=690000),
+            loss_decode=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0))
+    ],
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'))
+dataset_type = 'CamVidDataset'
+data_root = 'data/CamVid/'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+crop_size = (720, 960)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(
+        type='Resize',
+        img_scale=(960, 720),
+        ratio_range=(0.5, 2.5),
+        scale_step_size=0.25),
+    dict(type='RandomCrop', crop_size=(720, 960), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
+    dict(
+        type='Normalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
+    dict(type='Pad', size=(720, 960), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(960, 720),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=16,
+    workers_per_gpu=4,
+    train=dict(
+        type='CamVidDataset',
+        data_root='data/CamVid/',
+        img_dir='train',
+        ann_dir='train_labelIds',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(
+                type='Resize',
+                img_scale=(960, 720),
+                ratio_range=(0.5, 2.5),
+                scale_step_size=0.25),
+            dict(type='RandomCrop', crop_size=(720, 960), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PhotoMetricDistortion'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='Pad', size=(720, 960), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='CamVidDataset',
+        data_root='data/CamVid/',
+        img_dir='val',
+        ann_dir='val_labelIds',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(960, 720),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='CamVidDataset',
+        data_root='data/CamVid/',
+        img_dir='val',
+        ann_dir='val_labelIds',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(960, 720),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+cudnn_benchmark = True
+optimizer = dict(
+    type='SGD',
+    lr=0.1,
+    momentum=0.9,
+    weight_decay=0.0005,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            {
+                'backbone.backbone': dict(lr_mult=0.1),
+                'backbone.text_encoder': dict(lr_mult=0.0, decay_mult=0.0),
+                'backbone.contexts': dict(decay_mult=0.0),
+                '.bn.': dict(decay_mult=0.0)
+            })))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=200,
+    warmup_ratio=1e-05)
+runner = dict(type='IterBasedRunner', max_iters=10000)
+checkpoint_config = dict(by_epoch=False, interval=1000)
+evaluation = dict(interval=1000, metric='mIoU', pre_eval=True)
+checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'
+work_dir = './work_dirs/csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux'
+gpu_ids = [0]
+auto_resume = False
+
+2023-05-02 12:19:19,314 - mmseg - INFO - Set random seed to 902295242, deterministic: False
+2023-05-02 12:19:19,319 - mmseg - INFO - Loaded 367 images
+2023-05-02 12:19:20,944 - mmseg - INFO - initialize STDCNet with init_cfg {'type': 'Pretrained', 'checkpoint': 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'}
+2023-05-02 12:19:22,061 - mmseg - INFO - initialize FCNHead with init_cfg {'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+Name of parameter - Initialization information
+
+backbone.label_texts - torch.Size([11, 5]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.contexts - torch.Size([11, 8, 512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.backbone.stages.0.conv.weight - torch.Size([32, 3, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.0.bn.weight - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.0.bn.bias - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.1.conv.weight - torch.Size([64, 32, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.1.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.1.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.0.conv.weight - torch.Size([128, 64, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.0.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.0.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.1.conv.weight - torch.Size([64, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.1.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.1.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.2.conv.weight - torch.Size([32, 64, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.2.bn.weight - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.2.bn.bias - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.3.conv.weight - torch.Size([32, 32, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.3.bn.weight - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.layers.3.bn.bias - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.downsample.conv.weight - torch.Size([128, 1, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.downsample.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.0.downsample.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.0.conv.weight - torch.Size([128, 256, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.0.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.0.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.1.conv.weight - torch.Size([64, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.1.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.1.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.2.conv.weight - torch.Size([32, 64, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.2.bn.weight - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.2.bn.bias - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.3.conv.weight - torch.Size([32, 32, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.3.bn.weight - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.2.1.layers.3.bn.bias - torch.Size([32]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.0.conv.weight - torch.Size([256, 256, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.0.bn.weight - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.0.bn.bias - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.1.conv.weight - torch.Size([128, 256, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.1.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.1.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.2.conv.weight - torch.Size([64, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.2.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.2.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.3.conv.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.3.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.layers.3.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.downsample.conv.weight - torch.Size([256, 1, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.downsample.bn.weight - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.0.downsample.bn.bias - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.0.conv.weight - torch.Size([256, 512, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.0.bn.weight - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.0.bn.bias - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.1.conv.weight - torch.Size([128, 256, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.1.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.1.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.2.conv.weight - torch.Size([64, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.2.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.2.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.3.conv.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.3.bn.weight - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.3.1.layers.3.bn.bias - torch.Size([64]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.0.conv.weight - torch.Size([512, 512, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.0.bn.weight - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.0.bn.bias - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.1.conv.weight - torch.Size([256, 512, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.1.bn.weight - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.1.bn.bias - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.2.conv.weight - torch.Size([128, 256, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.2.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.2.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.3.conv.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.3.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.layers.3.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.downsample.conv.weight - torch.Size([512, 1, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.downsample.bn.weight - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.0.downsample.bn.bias - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.0.conv.weight - torch.Size([512, 1024, 1, 1]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.0.bn.weight - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.0.bn.bias - torch.Size([512]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.1.conv.weight - torch.Size([256, 512, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.1.bn.weight - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.1.bn.bias - torch.Size([256]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.2.conv.weight - torch.Size([128, 256, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.2.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.2.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.3.conv.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.3.bn.weight - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.backbone.stages.4.1.layers.3.bn.bias - torch.Size([128]): 
+PretrainedInit: load from https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth 
+
+backbone.text_encoder.positional_embedding - torch.Size([13, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.text_projection - torch.Size([512, 1024]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.0.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.1.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.2.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.3.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.4.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.5.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.6.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.7.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.8.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.9.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.10.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.attn.in_proj_weight - torch.Size([1536, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.attn.in_proj_bias - torch.Size([1536]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.attn.out_proj.weight - torch.Size([512, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.attn.out_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.ln_1.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.ln_1.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.mlp.c_fc.weight - torch.Size([2048, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.mlp.c_fc.bias - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.mlp.c_proj.weight - torch.Size([512, 2048]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.mlp.c_proj.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.ln_2.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.transformer.resblocks.11.ln_2.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.token_embedding.weight - torch.Size([49408, 512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.ln_final.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.text_encoder.ln_final.bias - torch.Size([512]): 
+Initialized by user-defined `init_weights` in CLIPTextContextEncoder  
+
+backbone.arms.0.conv_layer.conv.weight - torch.Size([128, 1035, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.arms.0.conv_layer.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.0.conv_layer.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.0.atten_conv_layer.1.conv.weight - torch.Size([128, 128, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.0.atten_conv_layer.1.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.0.atten_conv_layer.1.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.1.conv_layer.conv.weight - torch.Size([128, 512, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.arms.1.conv_layer.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.1.conv_layer.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.1.atten_conv_layer.1.conv.weight - torch.Size([128, 128, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.1.atten_conv_layer.1.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.arms.1.atten_conv_layer.1.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.convs.0.conv.weight - torch.Size([128, 128, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.convs.0.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.convs.0.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.convs.1.conv.weight - torch.Size([128, 128, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.convs.1.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.convs.1.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.conv_avg.conv.weight - torch.Size([128, 1035, 1, 1]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.conv_avg.bn.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.conv_avg.bn.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.ffm.conv0.conv.weight - torch.Size([256, 384, 1, 1]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+backbone.ffm.conv0.bn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.ffm.conv0.bn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.ffm.attention.1.conv.weight - torch.Size([64, 256, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+backbone.ffm.attention.2.conv.weight - torch.Size([256, 64, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.conv_seg.weight - torch.Size([19, 256, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+decode_head.conv_seg.bias - torch.Size([19]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+decode_head.convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.convs.0.bn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.convs.0.bn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.fusion_kernel - torch.Size([1, 3, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.conv_seg.weight - torch.Size([2, 64, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.conv_seg.bias - torch.Size([2]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.convs.0.conv.weight - torch.Size([64, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.convs.0.bn.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.0.convs.0.bn.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+2023-05-02 12:19:22,067 - mmseg - INFO - EncoderDecoder(
+  (backbone): STDCContextNet(
+    (backbone): STDCNet(
+      (stages): ModuleList(
+        (0): ConvModule(
+          (conv): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (1): ConvModule(
+          (conv): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (2): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=128, bias=False)
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+        (3): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=256, bias=False)
+              (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+        (4): Sequential(
+          (0): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+            (downsample): ConvModule(
+              (conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=512, bias=False)
+              (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+            (skip): AvgPool2d(kernel_size=3, stride=2, padding=1)
+          )
+          (1): STDCModule(
+            (layers): ModuleList(
+              (0): ConvModule(
+                (conv): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (1): ConvModule(
+                (conv): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (2): ConvModule(
+                (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+              (3): ConvModule(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (activate): ReLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+    )
+    init_cfg={'type': 'Pretrained', 'checkpoint': 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/stdc/stdc1_20220308-5368626c.pth'}
+    (text_encoder): CLIPTextContextEncoder(
+      (transformer): Transformer(
+        (resblocks): Sequential(
+          (0): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (1): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (2): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (3): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (4): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (5): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (6): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (7): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (8): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (9): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (10): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+          (11): ResidualAttentionBlock(
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=512, out_features=512, bias=True)
+            )
+            (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+              (gelu): QuickGELU()
+              (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+            )
+            (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (drop_path): Identity()
+          )
+        )
+      )
+      (token_embedding): Embedding(49408, 512)
+      (ln_final): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+    )
+    init_cfg={'type': 'Pretrained', 'checkpoint': './pretrained/RN50.pt'}
+    (arms): ModuleList(
+      (0): AttentionRefinementModule(
+        (conv_layer): ConvModule(
+          (conv): Conv2d(1035, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (atten_conv_layer): Sequential(
+          (0): AdaptiveAvgPool2d(output_size=(1, 1))
+          (1): ConvModule(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (2): Sigmoid()
+        )
+      )
+      (1): AttentionRefinementModule(
+        (conv_layer): ConvModule(
+          (conv): Conv2d(512, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+        (atten_conv_layer): Sequential(
+          (0): AdaptiveAvgPool2d(output_size=(1, 1))
+          (1): ConvModule(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (2): Sigmoid()
+        )
+      )
+    )
+    (convs): ModuleList(
+      (0): ConvModule(
+        (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+      (1): ConvModule(
+        (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+    )
+    (conv_avg): ConvModule(
+      (conv): Conv2d(1035, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (activate): ReLU(inplace=True)
+    )
+    (ffm): FeatureFusionModule(
+      (conv0): ConvModule(
+        (conv): Conv2d(384, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+      (attention): Sequential(
+        (0): AdaptiveAvgPool2d(output_size=(1, 1))
+        (1): ConvModule(
+          (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (activate): ReLU(inplace=True)
+        )
+        (2): ConvModule(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        )
+        (3): Sigmoid()
+      )
+    )
+  )
+  (decode_head): FCNHead(
+    input_transform=None, ignore_index=255, align_corners=True
+    (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+    (conv_seg): Conv2d(256, 19, kernel_size=(1, 1), stride=(1, 1))
+    (dropout): Dropout2d(p=0.1, inplace=False)
+    (convs): Sequential(
+      (0): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (activate): ReLU(inplace=True)
+      )
+    )
+  )
+  init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+  (auxiliary_head): ModuleList(
+    (0): STDCHead(
+      input_transform=None, ignore_index=255, align_corners=True
+      (loss_decode): ModuleList(
+        (0): CrossEntropyLoss(avg_non_ignore=False)
+        (1): DiceLoss()
+      )
+      (conv_seg): Conv2d(64, 2, kernel_size=(1, 1), stride=(1, 1))
+      (dropout): Dropout2d(p=0.1, inplace=False)
+      (convs): Sequential(
+        (0): ConvModule(
+          (conv): Conv2d(256, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (activate): ReLU(inplace=True)
+        )
+      )
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+    (1): VanillaHead(
+      input_transform=None, ignore_index=255, align_corners=False
+      (loss_decode): CrossEntropyLoss(avg_non_ignore=False)
+      (conv_seg): None
+      (dropout): Dropout2d(p=0.1, inplace=False)
+    )
+    init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+  )
+)
+2023-05-02 12:19:24,176 - mmseg - INFO - Loaded 101 images
+2023-05-02 12:19:24,177 - mmseg - INFO - Start running, host: linchiayi@cml9, work_dir: /tmp2/linchiayi/mmsegmentation/work_dirs/csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux
+2023-05-02 12:19:24,177 - mmseg - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2023-05-02 12:19:24,177 - mmseg - INFO - workflow: [('train', 1)], max: 10000 iters
+2023-05-02 12:19:24,177 - mmseg - INFO - Checkpoints will be saved to /tmp2/linchiayi/mmsegmentation/work_dirs/csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux by HardDiskBackend.
+2023-05-02 12:20:09,839 - mmseg - INFO - Iter [50/10000]	lr: 2.439e-02, eta: 2:30:12, time: 0.906, data_time: 0.229, memory: 18754, decode.loss_ce: 1.3329, decode.acc_seg: 50.7781, aux_0.loss_ce: 0.3085, aux_0.loss_dice: 0.4851, aux_0.acc_seg: 95.3900, aux_1.loss_ce: 0.9809, aux_1.acc_seg: 61.1879, loss: 3.1074
+2023-05-02 12:20:45,514 - mmseg - INFO - Iter [100/10000]	lr: 4.906e-02, eta: 2:13:35, time: 0.713, data_time: 0.190, memory: 18754, decode.loss_ce: 0.5171, decode.acc_seg: 78.8347, aux_0.loss_ce: 0.1664, aux_0.loss_dice: 0.4313, aux_0.acc_seg: 95.8460, aux_1.loss_ce: 0.4320, aux_1.acc_seg: 83.5141, loss: 1.5467
+2023-05-02 12:21:21,190 - mmseg - INFO - Iter [150/10000]	lr: 7.350e-02, eta: 2:07:39, time: 0.713, data_time: 0.189, memory: 18754, decode.loss_ce: 0.3220, decode.acc_seg: 86.4723, aux_0.loss_ce: 0.1430, aux_0.loss_dice: 0.3200, aux_0.acc_seg: 95.9231, aux_1.loss_ce: 0.3142, aux_1.acc_seg: 87.0951, loss: 1.0992
+2023-05-02 12:22:00,068 - mmseg - INFO - Iter [200/10000]	lr: 9.772e-02, eta: 2:07:00, time: 0.778, data_time: 0.253, memory: 18754, decode.loss_ce: 0.2943, decode.acc_seg: 87.9530, aux_0.loss_ce: 0.1395, aux_0.loss_dice: 0.3068, aux_0.acc_seg: 95.8809, aux_1.loss_ce: 0.2961, aux_1.acc_seg: 87.9206, loss: 1.0368
+2023-05-02 12:22:35,674 - mmseg - INFO - Iter [250/10000]	lr: 9.776e-02, eta: 2:04:13, time: 0.712, data_time: 0.186, memory: 18754, decode.loss_ce: 0.2419, decode.acc_seg: 89.8378, aux_0.loss_ce: 0.1346, aux_0.loss_dice: 0.2956, aux_0.acc_seg: 96.0183, aux_1.loss_ce: 0.2582, aux_1.acc_seg: 89.1981, loss: 0.9304
+2023-05-02 12:23:11,780 - mmseg - INFO - Iter [300/10000]	lr: 9.730e-02, eta: 2:02:27, time: 0.722, data_time: 0.194, memory: 18754, decode.loss_ce: 0.2191, decode.acc_seg: 90.7471, aux_0.loss_ce: 0.1360, aux_0.loss_dice: 0.2943, aux_0.acc_seg: 95.9000, aux_1.loss_ce: 0.2378, aux_1.acc_seg: 90.0233, loss: 0.8872
+2023-05-02 12:23:48,197 - mmseg - INFO - Iter [350/10000]	lr: 9.685e-02, eta: 2:01:09, time: 0.728, data_time: 0.195, memory: 18754, decode.loss_ce: 0.1891, decode.acc_seg: 91.6709, aux_0.loss_ce: 0.1338, aux_0.loss_dice: 0.2881, aux_0.acc_seg: 95.9980, aux_1.loss_ce: 0.2085, aux_1.acc_seg: 91.0320, loss: 0.8195
+2023-05-02 12:24:28,216 - mmseg - INFO - Iter [400/10000]	lr: 9.640e-02, eta: 2:01:27, time: 0.800, data_time: 0.267, memory: 18754, decode.loss_ce: 0.1844, decode.acc_seg: 91.9616, aux_0.loss_ce: 0.1337, aux_0.loss_dice: 0.2871, aux_0.acc_seg: 95.9697, aux_1.loss_ce: 0.2065, aux_1.acc_seg: 91.1653, loss: 0.8117
+2023-05-02 12:25:04,395 - mmseg - INFO - Iter [450/10000]	lr: 9.595e-02, eta: 2:00:12, time: 0.724, data_time: 0.194, memory: 18754, decode.loss_ce: 0.1694, decode.acc_seg: 92.5379, aux_0.loss_ce: 0.1318, aux_0.loss_dice: 0.2817, aux_0.acc_seg: 95.9917, aux_1.loss_ce: 0.1934, aux_1.acc_seg: 91.5720, loss: 0.7763
+2023-05-02 12:25:40,659 - mmseg - INFO - Iter [500/10000]	lr: 9.550e-02, eta: 1:59:05, time: 0.725, data_time: 0.197, memory: 18754, decode.loss_ce: 0.1739, decode.acc_seg: 92.3219, aux_0.loss_ce: 0.1313, aux_0.loss_dice: 0.2816, aux_0.acc_seg: 96.0661, aux_1.loss_ce: 0.2010, aux_1.acc_seg: 91.2590, loss: 0.7878
+2023-05-02 12:26:16,995 - mmseg - INFO - Iter [550/10000]	lr: 9.505e-02, eta: 1:58:06, time: 0.727, data_time: 0.195, memory: 18754, decode.loss_ce: 0.1479, decode.acc_seg: 93.3519, aux_0.loss_ce: 0.1287, aux_0.loss_dice: 0.2773, aux_0.acc_seg: 96.0514, aux_1.loss_ce: 0.1738, aux_1.acc_seg: 92.3158, loss: 0.7278
+2023-05-02 12:26:56,564 - mmseg - INFO - Iter [600/10000]	lr: 9.459e-02, eta: 1:58:01, time: 0.791, data_time: 0.261, memory: 18754, decode.loss_ce: 0.1420, decode.acc_seg: 93.5527, aux_0.loss_ce: 0.1282, aux_0.loss_dice: 0.2758, aux_0.acc_seg: 96.0725, aux_1.loss_ce: 0.1655, aux_1.acc_seg: 92.6743, loss: 0.7115
+2023-05-02 12:27:32,734 - mmseg - INFO - Iter [650/10000]	lr: 9.414e-02, eta: 1:57:02, time: 0.723, data_time: 0.193, memory: 18754, decode.loss_ce: 0.1405, decode.acc_seg: 93.4791, aux_0.loss_ce: 0.1279, aux_0.loss_dice: 0.2736, aux_0.acc_seg: 96.0238, aux_1.loss_ce: 0.1647, aux_1.acc_seg: 92.5113, loss: 0.7068
+2023-05-02 12:28:08,219 - mmseg - INFO - Iter [700/10000]	lr: 9.369e-02, eta: 1:55:57, time: 0.710, data_time: 0.186, memory: 18754, decode.loss_ce: 0.1419, decode.acc_seg: 93.5207, aux_0.loss_ce: 0.1287, aux_0.loss_dice: 0.2736, aux_0.acc_seg: 96.0212, aux_1.loss_ce: 0.1661, aux_1.acc_seg: 92.6137, loss: 0.7103
+2023-05-02 12:28:48,602 - mmseg - INFO - Iter [750/10000]	lr: 9.323e-02, eta: 1:55:56, time: 0.808, data_time: 0.273, memory: 18754, decode.loss_ce: 0.1339, decode.acc_seg: 93.9047, aux_0.loss_ce: 0.1281, aux_0.loss_dice: 0.2745, aux_0.acc_seg: 96.0512, aux_1.loss_ce: 0.1602, aux_1.acc_seg: 92.9113, loss: 0.6966
+2023-05-02 12:29:25,782 - mmseg - INFO - Iter [800/10000]	lr: 9.278e-02, eta: 1:55:14, time: 0.744, data_time: 0.207, memory: 18754, decode.loss_ce: 0.1264, decode.acc_seg: 94.1564, aux_0.loss_ce: 0.1263, aux_0.loss_dice: 0.2709, aux_0.acc_seg: 96.0645, aux_1.loss_ce: 0.1533, aux_1.acc_seg: 93.1218, loss: 0.6769
+2023-05-02 12:30:02,713 - mmseg - INFO - Iter [850/10000]	lr: 9.233e-02, eta: 1:54:29, time: 0.739, data_time: 0.200, memory: 18754, decode.loss_ce: 0.1310, decode.acc_seg: 94.0159, aux_0.loss_ce: 0.1293, aux_0.loss_dice: 0.2739, aux_0.acc_seg: 96.0307, aux_1.loss_ce: 0.1567, aux_1.acc_seg: 92.9996, loss: 0.6909
+2023-05-02 12:30:39,601 - mmseg - INFO - Iter [900/10000]	lr: 9.187e-02, eta: 1:53:45, time: 0.738, data_time: 0.199, memory: 18754, decode.loss_ce: 0.1265, decode.acc_seg: 94.1746, aux_0.loss_ce: 0.1277, aux_0.loss_dice: 0.2714, aux_0.acc_seg: 95.9974, aux_1.loss_ce: 0.1518, aux_1.acc_seg: 93.1957, loss: 0.6774
+2023-05-02 12:31:19,788 - mmseg - INFO - Iter [950/10000]	lr: 9.142e-02, eta: 1:53:33, time: 0.804, data_time: 0.268, memory: 18754, decode.loss_ce: 0.1243, decode.acc_seg: 94.3070, aux_0.loss_ce: 0.1265, aux_0.loss_dice: 0.2702, aux_0.acc_seg: 96.0637, aux_1.loss_ce: 0.1481, aux_1.acc_seg: 93.3856, loss: 0.6690
+2023-05-02 12:31:56,412 - mmseg - INFO - Saving checkpoint at 1000 iterations
+2023-05-02 12:31:58,581 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:31:58,582 - mmseg - INFO - Iter [1000/10000]	lr: 9.096e-02, eta: 1:53:06, time: 0.777, data_time: 0.198, memory: 18754, decode.loss_ce: 0.1169, decode.acc_seg: 94.5364, aux_0.loss_ce: 0.1254, aux_0.loss_dice: 0.2689, aux_0.acc_seg: 96.0739, aux_1.loss_ce: 0.1430, aux_1.acc_seg: 93.4603, loss: 0.6542
+2023-05-02 12:32:05,014 - mmseg - INFO - per class results:
+2023-05-02 12:32:05,016 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 76.69 | 81.12 |
+|   Building  | 91.66 | 94.21 |
+|     Car     | 90.57 | 93.06 |
+| Column_Pole | 11.65 | 13.61 |
+|    Fence    | 69.62 | 97.27 |
+|  Pedestrian | 46.35 |  86.7 |
+|     Road    |  96.7 | 99.03 |
+|   Sidewalk  | 89.32 | 92.82 |
+|  SignSymbol |  0.01 |  0.01 |
+|     Sky     | 94.37 | 97.05 |
+|     Tree    | 92.61 | 95.68 |
++-------------+-------+-------+
+2023-05-02 12:32:05,016 - mmseg - INFO - Summary:
+2023-05-02 12:32:05,016 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 95.17 | 69.05 | 77.32 |
++-------+-------+-------+
+2023-05-02 12:32:05,017 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:32:05,017 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9517, mIoU: 0.6905, mAcc: 0.7732, IoU.Bicyclist: 0.7669, IoU.Building: 0.9166, IoU.Car: 0.9057, IoU.Column_Pole: 0.1165, IoU.Fence: 0.6962, IoU.Pedestrian: 0.4635, IoU.Road: 0.9670, IoU.Sidewalk: 0.8932, IoU.SignSymbol: 0.0001, IoU.Sky: 0.9437, IoU.Tree: 0.9261, Acc.Bicyclist: 0.8112, Acc.Building: 0.9421, Acc.Car: 0.9306, Acc.Column_Pole: 0.1361, Acc.Fence: 0.9727, Acc.Pedestrian: 0.8670, Acc.Road: 0.9903, Acc.Sidewalk: 0.9282, Acc.SignSymbol: 0.0001, Acc.Sky: 0.9705, Acc.Tree: 0.9568
+2023-05-02 12:32:40,933 - mmseg - INFO - Iter [1050/10000]	lr: 9.051e-02, eta: 1:53:08, time: 0.846, data_time: 0.315, memory: 18754, decode.loss_ce: 0.1204, decode.acc_seg: 94.3968, aux_0.loss_ce: 0.1272, aux_0.loss_dice: 0.2686, aux_0.acc_seg: 95.9750, aux_1.loss_ce: 0.1476, aux_1.acc_seg: 93.3139, loss: 0.6638
+2023-05-02 12:33:16,986 - mmseg - INFO - Iter [1100/10000]	lr: 9.005e-02, eta: 1:52:15, time: 0.721, data_time: 0.191, memory: 18754, decode.loss_ce: 0.1130, decode.acc_seg: 94.7465, aux_0.loss_ce: 0.1267, aux_0.loss_dice: 0.2682, aux_0.acc_seg: 95.9943, aux_1.loss_ce: 0.1414, aux_1.acc_seg: 93.6210, loss: 0.6493
+2023-05-02 12:33:56,617 - mmseg - INFO - Iter [1150/10000]	lr: 8.960e-02, eta: 1:51:51, time: 0.793, data_time: 0.262, memory: 18754, decode.loss_ce: 0.1097, decode.acc_seg: 94.8408, aux_0.loss_ce: 0.1255, aux_0.loss_dice: 0.2678, aux_0.acc_seg: 96.0628, aux_1.loss_ce: 0.1378, aux_1.acc_seg: 93.7119, loss: 0.6408
+2023-05-02 12:34:32,843 - mmseg - INFO - Iter [1200/10000]	lr: 8.914e-02, eta: 1:51:00, time: 0.724, data_time: 0.193, memory: 18754, decode.loss_ce: 0.1078, decode.acc_seg: 94.8347, aux_0.loss_ce: 0.1263, aux_0.loss_dice: 0.2667, aux_0.acc_seg: 95.9926, aux_1.loss_ce: 0.1354, aux_1.acc_seg: 93.7235, loss: 0.6362
+2023-05-02 12:35:09,159 - mmseg - INFO - Iter [1250/10000]	lr: 8.869e-02, eta: 1:50:12, time: 0.726, data_time: 0.196, memory: 18754, decode.loss_ce: 0.1079, decode.acc_seg: 94.8690, aux_0.loss_ce: 0.1256, aux_0.loss_dice: 0.2651, aux_0.acc_seg: 96.0187, aux_1.loss_ce: 0.1377, aux_1.acc_seg: 93.6214, loss: 0.6363
+2023-05-02 12:35:48,568 - mmseg - INFO - Iter [1300/10000]	lr: 8.823e-02, eta: 1:49:45, time: 0.788, data_time: 0.259, memory: 18754, decode.loss_ce: 0.1096, decode.acc_seg: 94.6327, aux_0.loss_ce: 0.1233, aux_0.loss_dice: 0.2639, aux_0.acc_seg: 96.0969, aux_1.loss_ce: 0.1328, aux_1.acc_seg: 93.6850, loss: 0.6295
+2023-05-02 12:36:24,968 - mmseg - INFO - Iter [1350/10000]	lr: 8.777e-02, eta: 1:48:58, time: 0.728, data_time: 0.196, memory: 18754, decode.loss_ce: 0.1053, decode.acc_seg: 94.9939, aux_0.loss_ce: 0.1244, aux_0.loss_dice: 0.2644, aux_0.acc_seg: 96.0820, aux_1.loss_ce: 0.1313, aux_1.acc_seg: 93.8861, loss: 0.6254
+2023-05-02 12:37:01,322 - mmseg - INFO - Iter [1400/10000]	lr: 8.732e-02, eta: 1:48:11, time: 0.727, data_time: 0.196, memory: 18754, decode.loss_ce: 0.1059, decode.acc_seg: 95.0249, aux_0.loss_ce: 0.1246, aux_0.loss_dice: 0.2656, aux_0.acc_seg: 96.0681, aux_1.loss_ce: 0.1341, aux_1.acc_seg: 93.8275, loss: 0.6302
+2023-05-02 12:37:37,993 - mmseg - INFO - Iter [1450/10000]	lr: 8.686e-02, eta: 1:47:27, time: 0.733, data_time: 0.199, memory: 18754, decode.loss_ce: 0.1087, decode.acc_seg: 94.8388, aux_0.loss_ce: 0.1244, aux_0.loss_dice: 0.2647, aux_0.acc_seg: 96.0923, aux_1.loss_ce: 0.1345, aux_1.acc_seg: 93.7871, loss: 0.6323
+2023-05-02 12:38:18,038 - mmseg - INFO - Iter [1500/10000]	lr: 8.640e-02, eta: 1:47:02, time: 0.801, data_time: 0.265, memory: 18754, decode.loss_ce: 0.1187, decode.acc_seg: 94.4481, aux_0.loss_ce: 0.1249, aux_0.loss_dice: 0.2652, aux_0.acc_seg: 96.0595, aux_1.loss_ce: 0.1426, aux_1.acc_seg: 93.4259, loss: 0.6514
+2023-05-02 12:38:54,689 - mmseg - INFO - Iter [1550/10000]	lr: 8.594e-02, eta: 1:46:19, time: 0.733, data_time: 0.197, memory: 18754, decode.loss_ce: 0.1089, decode.acc_seg: 94.7317, aux_0.loss_ce: 0.1241, aux_0.loss_dice: 0.2637, aux_0.acc_seg: 96.0777, aux_1.loss_ce: 0.1342, aux_1.acc_seg: 93.6604, loss: 0.6309
+2023-05-02 12:39:31,294 - mmseg - INFO - Iter [1600/10000]	lr: 8.549e-02, eta: 1:45:35, time: 0.732, data_time: 0.199, memory: 18754, decode.loss_ce: 0.1041, decode.acc_seg: 94.9326, aux_0.loss_ce: 0.1214, aux_0.loss_dice: 0.2616, aux_0.acc_seg: 96.1467, aux_1.loss_ce: 0.1296, aux_1.acc_seg: 93.9131, loss: 0.6166
+2023-05-02 12:40:07,341 - mmseg - INFO - Iter [1650/10000]	lr: 8.503e-02, eta: 1:44:49, time: 0.721, data_time: 0.192, memory: 18754, decode.loss_ce: 0.1051, decode.acc_seg: 94.9075, aux_0.loss_ce: 0.1226, aux_0.loss_dice: 0.2622, aux_0.acc_seg: 96.1207, aux_1.loss_ce: 0.1308, aux_1.acc_seg: 93.8217, loss: 0.6206
+2023-05-02 12:40:47,793 - mmseg - INFO - Iter [1700/10000]	lr: 8.457e-02, eta: 1:44:25, time: 0.809, data_time: 0.271, memory: 18754, decode.loss_ce: 0.0971, decode.acc_seg: 95.3717, aux_0.loss_ce: 0.1230, aux_0.loss_dice: 0.2624, aux_0.acc_seg: 96.0940, aux_1.loss_ce: 0.1266, aux_1.acc_seg: 94.1304, loss: 0.6091
+2023-05-02 12:41:24,679 - mmseg - INFO - Iter [1750/10000]	lr: 8.411e-02, eta: 1:43:43, time: 0.738, data_time: 0.201, memory: 18754, decode.loss_ce: 0.1042, decode.acc_seg: 95.1351, aux_0.loss_ce: 0.1281, aux_0.loss_dice: 0.2652, aux_0.acc_seg: 95.8922, aux_1.loss_ce: 0.1331, aux_1.acc_seg: 93.9357, loss: 0.6305
+2023-05-02 12:42:01,164 - mmseg - INFO - Iter [1800/10000]	lr: 8.365e-02, eta: 1:42:59, time: 0.730, data_time: 0.197, memory: 18754, decode.loss_ce: 0.1014, decode.acc_seg: 95.1260, aux_0.loss_ce: 0.1225, aux_0.loss_dice: 0.2609, aux_0.acc_seg: 96.0854, aux_1.loss_ce: 0.1281, aux_1.acc_seg: 93.9835, loss: 0.6129
+2023-05-02 12:42:41,283 - mmseg - INFO - Iter [1850/10000]	lr: 8.319e-02, eta: 1:42:33, time: 0.802, data_time: 0.270, memory: 18754, decode.loss_ce: 0.0985, decode.acc_seg: 95.2865, aux_0.loss_ce: 0.1256, aux_0.loss_dice: 0.2636, aux_0.acc_seg: 95.9926, aux_1.loss_ce: 0.1264, aux_1.acc_seg: 94.1459, loss: 0.6139
+2023-05-02 12:43:17,212 - mmseg - INFO - Iter [1900/10000]	lr: 8.273e-02, eta: 1:41:47, time: 0.719, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0960, decode.acc_seg: 95.3697, aux_0.loss_ce: 0.1237, aux_0.loss_dice: 0.2626, aux_0.acc_seg: 96.0792, aux_1.loss_ce: 0.1259, aux_1.acc_seg: 94.1119, loss: 0.6083
+2023-05-02 12:43:52,913 - mmseg - INFO - Iter [1950/10000]	lr: 8.227e-02, eta: 1:41:01, time: 0.714, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0914, decode.acc_seg: 95.5796, aux_0.loss_ce: 0.1218, aux_0.loss_dice: 0.2610, aux_0.acc_seg: 96.1208, aux_1.loss_ce: 0.1188, aux_1.acc_seg: 94.4234, loss: 0.5930
+2023-05-02 12:44:28,753 - mmseg - INFO - Saving checkpoint at 2000 iterations
+2023-05-02 12:44:30,281 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:44:30,326 - mmseg - INFO - Iter [2000/10000]	lr: 8.181e-02, eta: 1:40:22, time: 0.748, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0984, decode.acc_seg: 95.2821, aux_0.loss_ce: 0.1224, aux_0.loss_dice: 0.2613, aux_0.acc_seg: 96.0893, aux_1.loss_ce: 0.1254, aux_1.acc_seg: 94.1547, loss: 0.6074
+2023-05-02 12:44:34,708 - mmseg - INFO - per class results:
+2023-05-02 12:44:34,709 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  |  83.8 | 91.92 |
+|   Building  | 92.49 | 94.19 |
+|     Car     | 89.96 | 95.01 |
+| Column_Pole | 18.62 | 21.88 |
+|    Fence    | 76.69 | 96.65 |
+|  Pedestrian | 62.54 |  83.5 |
+|     Road    | 97.28 |  98.2 |
+|   Sidewalk  | 90.77 | 97.57 |
+|  SignSymbol |  0.05 |  0.05 |
+|     Sky     | 93.97 |  95.9 |
+|     Tree    | 92.19 | 97.44 |
++-------------+-------+-------+
+2023-05-02 12:44:34,710 - mmseg - INFO - Summary:
+2023-05-02 12:44:34,710 - mmseg - INFO - 
++-------+-------+------+
+|  aAcc |  mIoU | mAcc |
++-------+-------+------+
+| 95.85 | 72.58 | 79.3 |
++-------+-------+------+
+2023-05-02 12:44:34,711 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:44:34,711 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9585, mIoU: 0.7258, mAcc: 0.7930, IoU.Bicyclist: 0.8380, IoU.Building: 0.9249, IoU.Car: 0.8996, IoU.Column_Pole: 0.1862, IoU.Fence: 0.7669, IoU.Pedestrian: 0.6254, IoU.Road: 0.9728, IoU.Sidewalk: 0.9077, IoU.SignSymbol: 0.0005, IoU.Sky: 0.9397, IoU.Tree: 0.9219, Acc.Bicyclist: 0.9192, Acc.Building: 0.9419, Acc.Car: 0.9501, Acc.Column_Pole: 0.2188, Acc.Fence: 0.9665, Acc.Pedestrian: 0.8350, Acc.Road: 0.9820, Acc.Sidewalk: 0.9757, Acc.SignSymbol: 0.0005, Acc.Sky: 0.9590, Acc.Tree: 0.9744
+2023-05-02 12:45:13,626 - mmseg - INFO - Iter [2050/10000]	lr: 8.135e-02, eta: 1:40:07, time: 0.866, data_time: 0.341, memory: 18754, decode.loss_ce: 0.0923, decode.acc_seg: 95.3792, aux_0.loss_ce: 0.1230, aux_0.loss_dice: 0.2609, aux_0.acc_seg: 96.0799, aux_1.loss_ce: 0.1188, aux_1.acc_seg: 94.2747, loss: 0.5949
+2023-05-02 12:45:49,851 - mmseg - INFO - Iter [2100/10000]	lr: 8.089e-02, eta: 1:39:23, time: 0.724, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0901, decode.acc_seg: 95.5912, aux_0.loss_ce: 0.1245, aux_0.loss_dice: 0.2597, aux_0.acc_seg: 95.9194, aux_1.loss_ce: 0.1196, aux_1.acc_seg: 94.3567, loss: 0.5940
+2023-05-02 12:46:25,952 - mmseg - INFO - Iter [2150/10000]	lr: 8.043e-02, eta: 1:38:39, time: 0.722, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0912, decode.acc_seg: 95.3815, aux_0.loss_ce: 0.1215, aux_0.loss_dice: 0.2589, aux_0.acc_seg: 96.0631, aux_1.loss_ce: 0.1195, aux_1.acc_seg: 94.1414, loss: 0.5912
+2023-05-02 12:47:01,976 - mmseg - INFO - Iter [2200/10000]	lr: 7.997e-02, eta: 1:37:56, time: 0.721, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0934, decode.acc_seg: 95.4231, aux_0.loss_ce: 0.1251, aux_0.loss_dice: 0.2620, aux_0.acc_seg: 95.9912, aux_1.loss_ce: 0.1241, aux_1.acc_seg: 94.1579, loss: 0.6047
+2023-05-02 12:47:41,349 - mmseg - INFO - Iter [2250/10000]	lr: 7.951e-02, eta: 1:37:24, time: 0.787, data_time: 0.259, memory: 18754, decode.loss_ce: 0.0910, decode.acc_seg: 95.5717, aux_0.loss_ce: 0.1217, aux_0.loss_dice: 0.2585, aux_0.acc_seg: 96.0530, aux_1.loss_ce: 0.1187, aux_1.acc_seg: 94.3868, loss: 0.5899
+2023-05-02 12:48:17,477 - mmseg - INFO - Iter [2300/10000]	lr: 7.905e-02, eta: 1:36:41, time: 0.723, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0899, decode.acc_seg: 95.5608, aux_0.loss_ce: 0.1229, aux_0.loss_dice: 0.2591, aux_0.acc_seg: 96.0157, aux_1.loss_ce: 0.1186, aux_1.acc_seg: 94.3617, loss: 0.5905
+2023-05-02 12:48:53,460 - mmseg - INFO - Iter [2350/10000]	lr: 7.859e-02, eta: 1:35:58, time: 0.720, data_time: 0.188, memory: 18754, decode.loss_ce: 0.0865, decode.acc_seg: 95.6348, aux_0.loss_ce: 0.1197, aux_0.loss_dice: 0.2559, aux_0.acc_seg: 96.1033, aux_1.loss_ce: 0.1147, aux_1.acc_seg: 94.4301, loss: 0.5767
+2023-05-02 12:49:32,980 - mmseg - INFO - Iter [2400/10000]	lr: 7.812e-02, eta: 1:35:26, time: 0.790, data_time: 0.260, memory: 18754, decode.loss_ce: 0.0999, decode.acc_seg: 95.2310, aux_0.loss_ce: 0.1244, aux_0.loss_dice: 0.2614, aux_0.acc_seg: 95.9968, aux_1.loss_ce: 0.1266, aux_1.acc_seg: 94.0458, loss: 0.6123
+2023-05-02 12:50:08,475 - mmseg - INFO - Iter [2450/10000]	lr: 7.766e-02, eta: 1:34:42, time: 0.710, data_time: 0.185, memory: 18754, decode.loss_ce: 0.0892, decode.acc_seg: 95.6087, aux_0.loss_ce: 0.1221, aux_0.loss_dice: 0.2578, aux_0.acc_seg: 96.0330, aux_1.loss_ce: 0.1177, aux_1.acc_seg: 94.3859, loss: 0.5869
+2023-05-02 12:50:43,718 - mmseg - INFO - Iter [2500/10000]	lr: 7.720e-02, eta: 1:33:57, time: 0.705, data_time: 0.183, memory: 18754, decode.loss_ce: 0.0946, decode.acc_seg: 95.4567, aux_0.loss_ce: 0.1231, aux_0.loss_dice: 0.2590, aux_0.acc_seg: 96.0148, aux_1.loss_ce: 0.1203, aux_1.acc_seg: 94.3655, loss: 0.5970
+2023-05-02 12:51:20,025 - mmseg - INFO - Iter [2550/10000]	lr: 7.674e-02, eta: 1:33:16, time: 0.726, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0999, decode.acc_seg: 95.2538, aux_0.loss_ce: 0.1207, aux_0.loss_dice: 0.2583, aux_0.acc_seg: 96.1269, aux_1.loss_ce: 0.1249, aux_1.acc_seg: 94.1933, loss: 0.6038
+2023-05-02 12:51:59,566 - mmseg - INFO - Iter [2600/10000]	lr: 7.627e-02, eta: 1:32:44, time: 0.791, data_time: 0.261, memory: 18754, decode.loss_ce: 0.0929, decode.acc_seg: 95.4164, aux_0.loss_ce: 0.1188, aux_0.loss_dice: 0.2571, aux_0.acc_seg: 96.1923, aux_1.loss_ce: 0.1174, aux_1.acc_seg: 94.3352, loss: 0.5863
+2023-05-02 12:52:35,469 - mmseg - INFO - Iter [2650/10000]	lr: 7.581e-02, eta: 1:32:01, time: 0.718, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0865, decode.acc_seg: 95.7254, aux_0.loss_ce: 0.1225, aux_0.loss_dice: 0.2572, aux_0.acc_seg: 96.0001, aux_1.loss_ce: 0.1153, aux_1.acc_seg: 94.5072, loss: 0.5814
+2023-05-02 12:53:11,580 - mmseg - INFO - Iter [2700/10000]	lr: 7.534e-02, eta: 1:31:20, time: 0.722, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0872, decode.acc_seg: 95.6931, aux_0.loss_ce: 0.1211, aux_0.loss_dice: 0.2574, aux_0.acc_seg: 96.0274, aux_1.loss_ce: 0.1162, aux_1.acc_seg: 94.4677, loss: 0.5819
+2023-05-02 12:53:47,941 - mmseg - INFO - Iter [2750/10000]	lr: 7.488e-02, eta: 1:30:39, time: 0.727, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0846, decode.acc_seg: 95.8252, aux_0.loss_ce: 0.1224, aux_0.loss_dice: 0.2580, aux_0.acc_seg: 95.9975, aux_1.loss_ce: 0.1122, aux_1.acc_seg: 94.6666, loss: 0.5772
+2023-05-02 12:54:27,791 - mmseg - INFO - Iter [2800/10000]	lr: 7.441e-02, eta: 1:30:08, time: 0.797, data_time: 0.267, memory: 18754, decode.loss_ce: 0.0858, decode.acc_seg: 95.7477, aux_0.loss_ce: 0.1209, aux_0.loss_dice: 0.2577, aux_0.acc_seg: 96.0819, aux_1.loss_ce: 0.1132, aux_1.acc_seg: 94.5690, loss: 0.5776
+2023-05-02 12:55:04,151 - mmseg - INFO - Iter [2850/10000]	lr: 7.395e-02, eta: 1:29:27, time: 0.727, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0835, decode.acc_seg: 95.9039, aux_0.loss_ce: 0.1224, aux_0.loss_dice: 0.2583, aux_0.acc_seg: 95.9774, aux_1.loss_ce: 0.1115, aux_1.acc_seg: 94.7029, loss: 0.5758
+2023-05-02 12:55:40,497 - mmseg - INFO - Iter [2900/10000]	lr: 7.348e-02, eta: 1:28:47, time: 0.727, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0811, decode.acc_seg: 95.9352, aux_0.loss_ce: 0.1208, aux_0.loss_dice: 0.2566, aux_0.acc_seg: 96.0521, aux_1.loss_ce: 0.1095, aux_1.acc_seg: 94.6778, loss: 0.5681
+2023-05-02 12:56:19,121 - mmseg - INFO - Iter [2950/10000]	lr: 7.302e-02, eta: 1:28:12, time: 0.773, data_time: 0.251, memory: 18754, decode.loss_ce: 0.0795, decode.acc_seg: 95.9357, aux_0.loss_ce: 0.1194, aux_0.loss_dice: 0.2547, aux_0.acc_seg: 96.0900, aux_1.loss_ce: 0.1097, aux_1.acc_seg: 94.6022, loss: 0.5633
+2023-05-02 12:56:55,609 - mmseg - INFO - Saving checkpoint at 3000 iterations
+2023-05-02 12:56:57,931 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:56:57,931 - mmseg - INFO - Iter [3000/10000]	lr: 7.255e-02, eta: 1:27:37, time: 0.777, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0860, decode.acc_seg: 95.6721, aux_0.loss_ce: 0.1209, aux_0.loss_dice: 0.2573, aux_0.acc_seg: 96.0441, aux_1.loss_ce: 0.1135, aux_1.acc_seg: 94.4847, loss: 0.5776
+2023-05-02 12:57:02,440 - mmseg - INFO - per class results:
+2023-05-02 12:57:02,441 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 85.46 | 95.14 |
+|   Building  | 92.74 | 94.83 |
+|     Car     | 92.58 | 97.01 |
+| Column_Pole | 15.07 | 16.55 |
+|    Fence    | 78.81 |  95.0 |
+|  Pedestrian | 66.15 | 77.45 |
+|     Road    | 97.49 | 98.25 |
+|   Sidewalk  | 91.54 | 96.39 |
+|  SignSymbol |  0.11 |  0.11 |
+|     Sky     | 93.84 | 98.36 |
+|     Tree    | 92.55 | 97.36 |
++-------------+-------+-------+
+2023-05-02 12:57:02,441 - mmseg - INFO - Summary:
+2023-05-02 12:57:02,441 - mmseg - INFO - 
++-------+------+-------+
+|  aAcc | mIoU |  mAcc |
++-------+------+-------+
+| 96.13 | 73.3 | 78.77 |
++-------+------+-------+
+2023-05-02 12:57:02,442 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 12:57:02,442 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9613, mIoU: 0.7330, mAcc: 0.7877, IoU.Bicyclist: 0.8546, IoU.Building: 0.9274, IoU.Car: 0.9258, IoU.Column_Pole: 0.1507, IoU.Fence: 0.7881, IoU.Pedestrian: 0.6615, IoU.Road: 0.9749, IoU.Sidewalk: 0.9154, IoU.SignSymbol: 0.0011, IoU.Sky: 0.9384, IoU.Tree: 0.9255, Acc.Bicyclist: 0.9514, Acc.Building: 0.9483, Acc.Car: 0.9701, Acc.Column_Pole: 0.1655, Acc.Fence: 0.9500, Acc.Pedestrian: 0.7745, Acc.Road: 0.9825, Acc.Sidewalk: 0.9639, Acc.SignSymbol: 0.0011, Acc.Sky: 0.9836, Acc.Tree: 0.9736
+2023-05-02 12:57:39,500 - mmseg - INFO - Iter [3050/10000]	lr: 7.208e-02, eta: 1:27:09, time: 0.831, data_time: 0.289, memory: 18754, decode.loss_ce: 0.0833, decode.acc_seg: 95.7963, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2545, aux_0.acc_seg: 96.0975, aux_1.loss_ce: 0.1103, aux_1.acc_seg: 94.5998, loss: 0.5672
+2023-05-02 12:58:16,909 - mmseg - INFO - Iter [3100/10000]	lr: 7.162e-02, eta: 1:26:31, time: 0.748, data_time: 0.203, memory: 18754, decode.loss_ce: 0.0871, decode.acc_seg: 95.7419, aux_0.loss_ce: 0.1220, aux_0.loss_dice: 0.2591, aux_0.acc_seg: 96.0686, aux_1.loss_ce: 0.1154, aux_1.acc_seg: 94.5641, loss: 0.5836
+2023-05-02 12:58:57,370 - mmseg - INFO - Iter [3150/10000]	lr: 7.115e-02, eta: 1:25:59, time: 0.809, data_time: 0.268, memory: 18754, decode.loss_ce: 0.0804, decode.acc_seg: 95.9646, aux_0.loss_ce: 0.1198, aux_0.loss_dice: 0.2552, aux_0.acc_seg: 96.0603, aux_1.loss_ce: 0.1086, aux_1.acc_seg: 94.7251, loss: 0.5640
+2023-05-02 12:59:34,547 - mmseg - INFO - Iter [3200/10000]	lr: 7.068e-02, eta: 1:25:21, time: 0.743, data_time: 0.201, memory: 18754, decode.loss_ce: 0.0803, decode.acc_seg: 96.0041, aux_0.loss_ce: 0.1223, aux_0.loss_dice: 0.2585, aux_0.acc_seg: 96.0399, aux_1.loss_ce: 0.1095, aux_1.acc_seg: 94.7743, loss: 0.5706
+2023-05-02 13:00:11,665 - mmseg - INFO - Iter [3250/10000]	lr: 7.022e-02, eta: 1:24:42, time: 0.742, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0765, decode.acc_seg: 96.1372, aux_0.loss_ce: 0.1199, aux_0.loss_dice: 0.2558, aux_0.acc_seg: 96.0788, aux_1.loss_ce: 0.1061, aux_1.acc_seg: 94.8470, loss: 0.5583
+2023-05-02 13:00:48,925 - mmseg - INFO - Iter [3300/10000]	lr: 6.975e-02, eta: 1:24:03, time: 0.745, data_time: 0.202, memory: 18754, decode.loss_ce: 0.0796, decode.acc_seg: 95.8820, aux_0.loss_ce: 0.1200, aux_0.loss_dice: 0.2551, aux_0.acc_seg: 96.0659, aux_1.loss_ce: 0.1076, aux_1.acc_seg: 94.6472, loss: 0.5624
+2023-05-02 13:01:29,600 - mmseg - INFO - Iter [3350/10000]	lr: 6.928e-02, eta: 1:23:32, time: 0.814, data_time: 0.273, memory: 18754, decode.loss_ce: 0.0827, decode.acc_seg: 95.8760, aux_0.loss_ce: 0.1218, aux_0.loss_dice: 0.2553, aux_0.acc_seg: 95.9748, aux_1.loss_ce: 0.1109, aux_1.acc_seg: 94.6482, loss: 0.5707
+2023-05-02 13:02:05,761 - mmseg - INFO - Iter [3400/10000]	lr: 6.881e-02, eta: 1:22:51, time: 0.723, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0779, decode.acc_seg: 96.0916, aux_0.loss_ce: 0.1211, aux_0.loss_dice: 0.2558, aux_0.acc_seg: 96.0263, aux_1.loss_ce: 0.1071, aux_1.acc_seg: 94.8559, loss: 0.5619
+2023-05-02 13:02:40,912 - mmseg - INFO - Iter [3450/10000]	lr: 6.834e-02, eta: 1:22:09, time: 0.703, data_time: 0.183, memory: 18754, decode.loss_ce: 0.0822, decode.acc_seg: 95.9301, aux_0.loss_ce: 0.1220, aux_0.loss_dice: 0.2570, aux_0.acc_seg: 96.0028, aux_1.loss_ce: 0.1109, aux_1.acc_seg: 94.7180, loss: 0.5721
+2023-05-02 13:03:20,989 - mmseg - INFO - Iter [3500/10000]	lr: 6.787e-02, eta: 1:21:36, time: 0.802, data_time: 0.264, memory: 18754, decode.loss_ce: 0.0749, decode.acc_seg: 96.1785, aux_0.loss_ce: 0.1198, aux_0.loss_dice: 0.2546, aux_0.acc_seg: 96.0661, aux_1.loss_ce: 0.1042, aux_1.acc_seg: 94.9088, loss: 0.5535
+2023-05-02 13:03:58,304 - mmseg - INFO - Iter [3550/10000]	lr: 6.740e-02, eta: 1:20:57, time: 0.746, data_time: 0.204, memory: 18754, decode.loss_ce: 0.0815, decode.acc_seg: 95.8308, aux_0.loss_ce: 0.1206, aux_0.loss_dice: 0.2544, aux_0.acc_seg: 96.0175, aux_1.loss_ce: 0.1087, aux_1.acc_seg: 94.6534, loss: 0.5651
+2023-05-02 13:04:35,031 - mmseg - INFO - Iter [3600/10000]	lr: 6.693e-02, eta: 1:20:18, time: 0.735, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0789, decode.acc_seg: 96.0138, aux_0.loss_ce: 0.1184, aux_0.loss_dice: 0.2545, aux_0.acc_seg: 96.1236, aux_1.loss_ce: 0.1070, aux_1.acc_seg: 94.7756, loss: 0.5589
+2023-05-02 13:05:12,030 - mmseg - INFO - Iter [3650/10000]	lr: 6.646e-02, eta: 1:19:39, time: 0.740, data_time: 0.201, memory: 18754, decode.loss_ce: 0.0787, decode.acc_seg: 96.0294, aux_0.loss_ce: 0.1196, aux_0.loss_dice: 0.2541, aux_0.acc_seg: 96.0575, aux_1.loss_ce: 0.1060, aux_1.acc_seg: 94.8547, loss: 0.5583
+2023-05-02 13:05:52,305 - mmseg - INFO - Iter [3700/10000]	lr: 6.599e-02, eta: 1:19:06, time: 0.805, data_time: 0.265, memory: 18754, decode.loss_ce: 0.0845, decode.acc_seg: 95.7764, aux_0.loss_ce: 0.1214, aux_0.loss_dice: 0.2568, aux_0.acc_seg: 96.0306, aux_1.loss_ce: 0.1129, aux_1.acc_seg: 94.5221, loss: 0.5755
+2023-05-02 13:06:28,599 - mmseg - INFO - Iter [3750/10000]	lr: 6.552e-02, eta: 1:18:26, time: 0.726, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0794, decode.acc_seg: 96.0121, aux_0.loss_ce: 0.1208, aux_0.loss_dice: 0.2556, aux_0.acc_seg: 96.0239, aux_1.loss_ce: 0.1072, aux_1.acc_seg: 94.8450, loss: 0.5630
+2023-05-02 13:07:04,629 - mmseg - INFO - Iter [3800/10000]	lr: 6.505e-02, eta: 1:17:46, time: 0.721, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0772, decode.acc_seg: 96.0641, aux_0.loss_ce: 0.1188, aux_0.loss_dice: 0.2539, aux_0.acc_seg: 96.1046, aux_1.loss_ce: 0.1069, aux_1.acc_seg: 94.7327, loss: 0.5568
+2023-05-02 13:07:39,459 - mmseg - INFO - Iter [3850/10000]	lr: 6.457e-02, eta: 1:17:04, time: 0.697, data_time: 0.184, memory: 18754, decode.loss_ce: 0.0797, decode.acc_seg: 96.1310, aux_0.loss_ce: 0.1216, aux_0.loss_dice: 0.2570, aux_0.acc_seg: 96.0157, aux_1.loss_ce: 0.1075, aux_1.acc_seg: 94.9360, loss: 0.5659
+2023-05-02 13:08:17,838 - mmseg - INFO - Iter [3900/10000]	lr: 6.410e-02, eta: 1:16:27, time: 0.768, data_time: 0.248, memory: 18754, decode.loss_ce: 0.0810, decode.acc_seg: 95.9680, aux_0.loss_ce: 0.1207, aux_0.loss_dice: 0.2554, aux_0.acc_seg: 96.0093, aux_1.loss_ce: 0.1084, aux_1.acc_seg: 94.7557, loss: 0.5654
+2023-05-02 13:08:54,708 - mmseg - INFO - Iter [3950/10000]	lr: 6.363e-02, eta: 1:15:49, time: 0.737, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0802, decode.acc_seg: 95.9994, aux_0.loss_ce: 0.1210, aux_0.loss_dice: 0.2547, aux_0.acc_seg: 95.9829, aux_1.loss_ce: 0.1084, aux_1.acc_seg: 94.7374, loss: 0.5642
+2023-05-02 13:09:31,639 - mmseg - INFO - Saving checkpoint at 4000 iterations
+2023-05-02 13:09:33,701 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:09:33,701 - mmseg - INFO - Iter [4000/10000]	lr: 6.315e-02, eta: 1:15:13, time: 0.781, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0769, decode.acc_seg: 96.1007, aux_0.loss_ce: 0.1178, aux_0.loss_dice: 0.2535, aux_0.acc_seg: 96.1376, aux_1.loss_ce: 0.1048, aux_1.acc_seg: 94.8456, loss: 0.5529
+2023-05-02 13:09:37,919 - mmseg - INFO - per class results:
+2023-05-02 13:09:37,920 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 85.01 | 92.93 |
+|   Building  | 90.95 | 92.34 |
+|     Car     | 91.57 |  94.2 |
+| Column_Pole | 25.24 | 33.09 |
+|    Fence    | 79.17 | 92.94 |
+|  Pedestrian | 66.76 | 77.96 |
+|     Road    | 97.42 | 98.53 |
+|   Sidewalk  | 91.03 | 97.64 |
+|  SignSymbol |  1.37 |  1.37 |
+|     Sky     | 93.66 | 96.69 |
+|     Tree    | 90.28 | 98.26 |
++-------------+-------+-------+
+2023-05-02 13:09:37,920 - mmseg - INFO - Summary:
+2023-05-02 13:09:37,920 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 95.61 | 73.86 | 79.63 |
++-------+-------+-------+
+2023-05-02 13:09:37,921 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:09:37,921 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9561, mIoU: 0.7386, mAcc: 0.7963, IoU.Bicyclist: 0.8501, IoU.Building: 0.9095, IoU.Car: 0.9157, IoU.Column_Pole: 0.2524, IoU.Fence: 0.7917, IoU.Pedestrian: 0.6676, IoU.Road: 0.9742, IoU.Sidewalk: 0.9103, IoU.SignSymbol: 0.0137, IoU.Sky: 0.9366, IoU.Tree: 0.9028, Acc.Bicyclist: 0.9293, Acc.Building: 0.9234, Acc.Car: 0.9420, Acc.Column_Pole: 0.3309, Acc.Fence: 0.9294, Acc.Pedestrian: 0.7796, Acc.Road: 0.9853, Acc.Sidewalk: 0.9764, Acc.SignSymbol: 0.0137, Acc.Sky: 0.9669, Acc.Tree: 0.9826
+2023-05-02 13:10:18,066 - mmseg - INFO - Iter [4050/10000]	lr: 6.268e-02, eta: 1:14:45, time: 0.886, data_time: 0.350, memory: 18754, decode.loss_ce: 0.0818, decode.acc_seg: 95.9608, aux_0.loss_ce: 0.1216, aux_0.loss_dice: 0.2553, aux_0.acc_seg: 95.9972, aux_1.loss_ce: 0.1082, aux_1.acc_seg: 94.7657, loss: 0.5668
+2023-05-02 13:10:54,987 - mmseg - INFO - Iter [4100/10000]	lr: 6.221e-02, eta: 1:14:07, time: 0.738, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0753, decode.acc_seg: 96.2222, aux_0.loss_ce: 0.1192, aux_0.loss_dice: 0.2544, aux_0.acc_seg: 96.0584, aux_1.loss_ce: 0.1034, aux_1.acc_seg: 95.0002, loss: 0.5524
+2023-05-02 13:11:31,844 - mmseg - INFO - Iter [4150/10000]	lr: 6.173e-02, eta: 1:13:28, time: 0.737, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0766, decode.acc_seg: 96.0579, aux_0.loss_ce: 0.1199, aux_0.loss_dice: 0.2545, aux_0.acc_seg: 96.0505, aux_1.loss_ce: 0.1046, aux_1.acc_seg: 94.8127, loss: 0.5556
+2023-05-02 13:12:08,470 - mmseg - INFO - Iter [4200/10000]	lr: 6.126e-02, eta: 1:12:49, time: 0.732, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0763, decode.acc_seg: 96.1208, aux_0.loss_ce: 0.1204, aux_0.loss_dice: 0.2550, aux_0.acc_seg: 96.0246, aux_1.loss_ce: 0.1049, aux_1.acc_seg: 94.8606, loss: 0.5566
+2023-05-02 13:12:48,766 - mmseg - INFO - Iter [4250/10000]	lr: 6.078e-02, eta: 1:12:15, time: 0.806, data_time: 0.269, memory: 18754, decode.loss_ce: 0.0727, decode.acc_seg: 96.2205, aux_0.loss_ce: 0.1177, aux_0.loss_dice: 0.2526, aux_0.acc_seg: 96.1243, aux_1.loss_ce: 0.1008, aux_1.acc_seg: 94.9697, loss: 0.5438
+2023-05-02 13:13:25,904 - mmseg - INFO - Iter [4300/10000]	lr: 6.031e-02, eta: 1:11:36, time: 0.743, data_time: 0.204, memory: 18754, decode.loss_ce: 0.0723, decode.acc_seg: 96.2895, aux_0.loss_ce: 0.1168, aux_0.loss_dice: 0.2511, aux_0.acc_seg: 96.1229, aux_1.loss_ce: 0.1002, aux_1.acc_seg: 95.0384, loss: 0.5405
+2023-05-02 13:14:02,628 - mmseg - INFO - Iter [4350/10000]	lr: 5.983e-02, eta: 1:10:57, time: 0.734, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0744, decode.acc_seg: 96.2098, aux_0.loss_ce: 0.1203, aux_0.loss_dice: 0.2548, aux_0.acc_seg: 96.0423, aux_1.loss_ce: 0.1027, aux_1.acc_seg: 94.9733, loss: 0.5522
+2023-05-02 13:14:38,705 - mmseg - INFO - Iter [4400/10000]	lr: 5.935e-02, eta: 1:10:17, time: 0.722, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0721, decode.acc_seg: 96.3459, aux_0.loss_ce: 0.1203, aux_0.loss_dice: 0.2534, aux_0.acc_seg: 96.0033, aux_1.loss_ce: 0.1013, aux_1.acc_seg: 95.0807, loss: 0.5471
+2023-05-02 13:15:18,299 - mmseg - INFO - Iter [4450/10000]	lr: 5.888e-02, eta: 1:09:42, time: 0.792, data_time: 0.261, memory: 18754, decode.loss_ce: 0.0726, decode.acc_seg: 96.3018, aux_0.loss_ce: 0.1196, aux_0.loss_dice: 0.2535, aux_0.acc_seg: 96.0230, aux_1.loss_ce: 0.1024, aux_1.acc_seg: 94.9809, loss: 0.5481
+2023-05-02 13:15:54,470 - mmseg - INFO - Iter [4500/10000]	lr: 5.840e-02, eta: 1:09:03, time: 0.723, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0747, decode.acc_seg: 96.2111, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2530, aux_0.acc_seg: 96.0406, aux_1.loss_ce: 0.1034, aux_1.acc_seg: 94.9384, loss: 0.5502
+2023-05-02 13:16:30,758 - mmseg - INFO - Iter [4550/10000]	lr: 5.792e-02, eta: 1:08:23, time: 0.726, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0719, decode.acc_seg: 96.3048, aux_0.loss_ce: 0.1190, aux_0.loss_dice: 0.2524, aux_0.acc_seg: 96.0271, aux_1.loss_ce: 0.1004, aux_1.acc_seg: 95.0353, loss: 0.5437
+2023-05-02 13:17:10,472 - mmseg - INFO - Iter [4600/10000]	lr: 5.744e-02, eta: 1:07:48, time: 0.794, data_time: 0.262, memory: 18754, decode.loss_ce: 0.0748, decode.acc_seg: 96.1620, aux_0.loss_ce: 0.1196, aux_0.loss_dice: 0.2521, aux_0.acc_seg: 95.9914, aux_1.loss_ce: 0.1039, aux_1.acc_seg: 94.8352, loss: 0.5505
+2023-05-02 13:17:47,421 - mmseg - INFO - Iter [4650/10000]	lr: 5.696e-02, eta: 1:07:10, time: 0.739, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0765, decode.acc_seg: 96.1573, aux_0.loss_ce: 0.1189, aux_0.loss_dice: 0.2533, aux_0.acc_seg: 96.0529, aux_1.loss_ce: 0.1039, aux_1.acc_seg: 94.9875, loss: 0.5525
+2023-05-02 13:18:24,225 - mmseg - INFO - Iter [4700/10000]	lr: 5.648e-02, eta: 1:06:31, time: 0.736, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0756, decode.acc_seg: 96.2049, aux_0.loss_ce: 0.1204, aux_0.loss_dice: 0.2541, aux_0.acc_seg: 95.9873, aux_1.loss_ce: 0.1033, aux_1.acc_seg: 94.9686, loss: 0.5534
+2023-05-02 13:19:00,759 - mmseg - INFO - Iter [4750/10000]	lr: 5.600e-02, eta: 1:05:52, time: 0.731, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0718, decode.acc_seg: 96.2799, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2521, aux_0.acc_seg: 96.0710, aux_1.loss_ce: 0.0997, aux_1.acc_seg: 95.0032, loss: 0.5417
+2023-05-02 13:19:40,323 - mmseg - INFO - Iter [4800/10000]	lr: 5.552e-02, eta: 1:05:16, time: 0.791, data_time: 0.261, memory: 18754, decode.loss_ce: 0.0798, decode.acc_seg: 96.0717, aux_0.loss_ce: 0.1208, aux_0.loss_dice: 0.2547, aux_0.acc_seg: 96.0026, aux_1.loss_ce: 0.1060, aux_1.acc_seg: 94.8741, loss: 0.5613
+2023-05-02 13:20:15,220 - mmseg - INFO - Iter [4850/10000]	lr: 5.504e-02, eta: 1:04:36, time: 0.698, data_time: 0.182, memory: 18754, decode.loss_ce: 0.0760, decode.acc_seg: 96.1661, aux_0.loss_ce: 0.1203, aux_0.loss_dice: 0.2541, aux_0.acc_seg: 95.9892, aux_1.loss_ce: 0.1031, aux_1.acc_seg: 94.9303, loss: 0.5536
+2023-05-02 13:20:51,589 - mmseg - INFO - Iter [4900/10000]	lr: 5.456e-02, eta: 1:03:57, time: 0.727, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0748, decode.acc_seg: 96.1609, aux_0.loss_ce: 0.1180, aux_0.loss_dice: 0.2524, aux_0.acc_seg: 96.0924, aux_1.loss_ce: 0.1024, aux_1.acc_seg: 94.9399, loss: 0.5476
+2023-05-02 13:21:27,965 - mmseg - INFO - Iter [4950/10000]	lr: 5.408e-02, eta: 1:03:18, time: 0.728, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0783, decode.acc_seg: 95.9863, aux_0.loss_ce: 0.1193, aux_0.loss_dice: 0.2530, aux_0.acc_seg: 96.0366, aux_1.loss_ce: 0.1043, aux_1.acc_seg: 94.8281, loss: 0.5550
+2023-05-02 13:22:07,651 - mmseg - INFO - Saving checkpoint at 5000 iterations
+2023-05-02 13:22:09,705 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:22:09,705 - mmseg - INFO - Iter [5000/10000]	lr: 5.360e-02, eta: 1:02:45, time: 0.836, data_time: 0.262, memory: 18754, decode.loss_ce: 0.0747, decode.acc_seg: 96.2195, aux_0.loss_ce: 0.1202, aux_0.loss_dice: 0.2537, aux_0.acc_seg: 96.0005, aux_1.loss_ce: 0.1038, aux_1.acc_seg: 94.9112, loss: 0.5525
+2023-05-02 13:22:13,923 - mmseg - INFO - per class results:
+2023-05-02 13:22:13,924 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 85.76 | 90.84 |
+|   Building  | 93.54 | 95.39 |
+|     Car     | 92.45 | 93.72 |
+| Column_Pole |  9.92 | 10.26 |
+|    Fence    | 81.06 | 94.67 |
+|  Pedestrian | 68.25 |  80.1 |
+|     Road    |  97.5 | 99.09 |
+|   Sidewalk  | 91.76 | 95.82 |
+|  SignSymbol |  0.0  |  0.0  |
+|     Sky     | 94.16 | 96.72 |
+|     Tree    | 92.03 | 98.34 |
++-------------+-------+-------+
+2023-05-02 13:22:13,924 - mmseg - INFO - Summary:
+2023-05-02 13:22:13,925 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 96.29 | 73.31 | 77.72 |
++-------+-------+-------+
+2023-05-02 13:22:13,925 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:22:13,925 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9629, mIoU: 0.7331, mAcc: 0.7772, IoU.Bicyclist: 0.8576, IoU.Building: 0.9354, IoU.Car: 0.9245, IoU.Column_Pole: 0.0992, IoU.Fence: 0.8106, IoU.Pedestrian: 0.6825, IoU.Road: 0.9750, IoU.Sidewalk: 0.9176, IoU.SignSymbol: 0.0000, IoU.Sky: 0.9416, IoU.Tree: 0.9203, Acc.Bicyclist: 0.9084, Acc.Building: 0.9539, Acc.Car: 0.9372, Acc.Column_Pole: 0.1026, Acc.Fence: 0.9467, Acc.Pedestrian: 0.8010, Acc.Road: 0.9909, Acc.Sidewalk: 0.9582, Acc.SignSymbol: 0.0000, Acc.Sky: 0.9672, Acc.Tree: 0.9834
+2023-05-02 13:22:50,087 - mmseg - INFO - Iter [5050/10000]	lr: 5.312e-02, eta: 1:02:10, time: 0.807, data_time: 0.278, memory: 18754, decode.loss_ce: 0.0751, decode.acc_seg: 96.1632, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2527, aux_0.acc_seg: 96.0467, aux_1.loss_ce: 0.1036, aux_1.acc_seg: 94.9165, loss: 0.5504
+2023-05-02 13:23:26,461 - mmseg - INFO - Iter [5100/10000]	lr: 5.263e-02, eta: 1:01:31, time: 0.727, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0725, decode.acc_seg: 96.2397, aux_0.loss_ce: 0.1193, aux_0.loss_dice: 0.2523, aux_0.acc_seg: 95.9925, aux_1.loss_ce: 0.1011, aux_1.acc_seg: 94.9831, loss: 0.5452
+2023-05-02 13:24:05,938 - mmseg - INFO - Iter [5150/10000]	lr: 5.215e-02, eta: 1:00:55, time: 0.789, data_time: 0.262, memory: 18754, decode.loss_ce: 0.0750, decode.acc_seg: 96.2734, aux_0.loss_ce: 0.1192, aux_0.loss_dice: 0.2530, aux_0.acc_seg: 96.0681, aux_1.loss_ce: 0.1011, aux_1.acc_seg: 95.0766, loss: 0.5482
+2023-05-02 13:24:41,666 - mmseg - INFO - Iter [5200/10000]	lr: 5.167e-02, eta: 1:00:15, time: 0.715, data_time: 0.188, memory: 18754, decode.loss_ce: 0.0727, decode.acc_seg: 96.3640, aux_0.loss_ce: 0.1193, aux_0.loss_dice: 0.2525, aux_0.acc_seg: 96.0218, aux_1.loss_ce: 0.0988, aux_1.acc_seg: 95.1866, loss: 0.5432
+2023-05-02 13:25:17,901 - mmseg - INFO - Iter [5250/10000]	lr: 5.118e-02, eta: 0:59:36, time: 0.725, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0705, decode.acc_seg: 96.3907, aux_0.loss_ce: 0.1180, aux_0.loss_dice: 0.2515, aux_0.acc_seg: 96.0758, aux_1.loss_ce: 0.0994, aux_1.acc_seg: 95.0992, loss: 0.5394
+2023-05-02 13:25:52,990 - mmseg - INFO - Iter [5300/10000]	lr: 5.070e-02, eta: 0:58:56, time: 0.702, data_time: 0.186, memory: 18754, decode.loss_ce: 0.0710, decode.acc_seg: 96.4481, aux_0.loss_ce: 0.1201, aux_0.loss_dice: 0.2530, aux_0.acc_seg: 95.9811, aux_1.loss_ce: 0.0995, aux_1.acc_seg: 95.2063, loss: 0.5436
+2023-05-02 13:26:32,845 - mmseg - INFO - Iter [5350/10000]	lr: 5.021e-02, eta: 0:58:21, time: 0.797, data_time: 0.266, memory: 18754, decode.loss_ce: 0.0709, decode.acc_seg: 96.3190, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2507, aux_0.acc_seg: 95.9652, aux_1.loss_ce: 0.0995, aux_1.acc_seg: 95.0681, loss: 0.5402
+2023-05-02 13:27:09,243 - mmseg - INFO - Iter [5400/10000]	lr: 4.972e-02, eta: 0:57:42, time: 0.728, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0697, decode.acc_seg: 96.4564, aux_0.loss_ce: 0.1216, aux_0.loss_dice: 0.2531, aux_0.acc_seg: 95.8824, aux_1.loss_ce: 0.0994, aux_1.acc_seg: 95.1435, loss: 0.5438
+2023-05-02 13:27:45,604 - mmseg - INFO - Iter [5450/10000]	lr: 4.924e-02, eta: 0:57:03, time: 0.727, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0690, decode.acc_seg: 96.4739, aux_0.loss_ce: 0.1192, aux_0.loss_dice: 0.2533, aux_0.acc_seg: 96.0394, aux_1.loss_ce: 0.0982, aux_1.acc_seg: 95.1970, loss: 0.5397
+2023-05-02 13:28:22,041 - mmseg - INFO - Iter [5500/10000]	lr: 4.875e-02, eta: 0:56:25, time: 0.729, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0709, decode.acc_seg: 96.3541, aux_0.loss_ce: 0.1208, aux_0.loss_dice: 0.2529, aux_0.acc_seg: 95.9438, aux_1.loss_ce: 0.1002, aux_1.acc_seg: 95.0537, loss: 0.5449
+2023-05-02 13:29:01,985 - mmseg - INFO - Iter [5550/10000]	lr: 4.826e-02, eta: 0:55:49, time: 0.799, data_time: 0.264, memory: 18754, decode.loss_ce: 0.0699, decode.acc_seg: 96.4222, aux_0.loss_ce: 0.1194, aux_0.loss_dice: 0.2532, aux_0.acc_seg: 96.0463, aux_1.loss_ce: 0.0996, aux_1.acc_seg: 95.1026, loss: 0.5421
+2023-05-02 13:29:37,978 - mmseg - INFO - Iter [5600/10000]	lr: 4.778e-02, eta: 0:55:10, time: 0.720, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0682, decode.acc_seg: 96.3838, aux_0.loss_ce: 0.1168, aux_0.loss_dice: 0.2491, aux_0.acc_seg: 96.0598, aux_1.loss_ce: 0.0961, aux_1.acc_seg: 95.1389, loss: 0.5302
+2023-05-02 13:30:14,239 - mmseg - INFO - Iter [5650/10000]	lr: 4.729e-02, eta: 0:54:31, time: 0.725, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0678, decode.acc_seg: 96.4734, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2509, aux_0.acc_seg: 96.0461, aux_1.loss_ce: 0.0972, aux_1.acc_seg: 95.1557, loss: 0.5341
+2023-05-02 13:30:53,151 - mmseg - INFO - Iter [5700/10000]	lr: 4.680e-02, eta: 0:53:55, time: 0.778, data_time: 0.257, memory: 18754, decode.loss_ce: 0.0680, decode.acc_seg: 96.3927, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2478, aux_0.acc_seg: 96.0844, aux_1.loss_ce: 0.0965, aux_1.acc_seg: 95.0849, loss: 0.5283
+2023-05-02 13:31:28,934 - mmseg - INFO - Iter [5750/10000]	lr: 4.631e-02, eta: 0:53:16, time: 0.716, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0687, decode.acc_seg: 96.4616, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2523, aux_0.acc_seg: 96.0288, aux_1.loss_ce: 0.0984, aux_1.acc_seg: 95.1077, loss: 0.5386
+2023-05-02 13:32:04,709 - mmseg - INFO - Iter [5800/10000]	lr: 4.582e-02, eta: 0:52:37, time: 0.715, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0683, decode.acc_seg: 96.4360, aux_0.loss_ce: 0.1176, aux_0.loss_dice: 0.2510, aux_0.acc_seg: 96.0514, aux_1.loss_ce: 0.0980, aux_1.acc_seg: 95.1080, loss: 0.5349
+2023-05-02 13:32:40,241 - mmseg - INFO - Iter [5850/10000]	lr: 4.533e-02, eta: 0:51:58, time: 0.711, data_time: 0.189, memory: 18754, decode.loss_ce: 0.0689, decode.acc_seg: 96.4793, aux_0.loss_ce: 0.1188, aux_0.loss_dice: 0.2515, aux_0.acc_seg: 96.0361, aux_1.loss_ce: 0.0983, aux_1.acc_seg: 95.1749, loss: 0.5375
+2023-05-02 13:33:20,274 - mmseg - INFO - Iter [5900/10000]	lr: 4.483e-02, eta: 0:51:22, time: 0.801, data_time: 0.266, memory: 18754, decode.loss_ce: 0.0665, decode.acc_seg: 96.4849, aux_0.loss_ce: 0.1171, aux_0.loss_dice: 0.2497, aux_0.acc_seg: 96.0451, aux_1.loss_ce: 0.0954, aux_1.acc_seg: 95.1673, loss: 0.5287
+2023-05-02 13:33:56,630 - mmseg - INFO - Iter [5950/10000]	lr: 4.434e-02, eta: 0:50:43, time: 0.727, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0690, decode.acc_seg: 96.4542, aux_0.loss_ce: 0.1179, aux_0.loss_dice: 0.2516, aux_0.acc_seg: 96.0470, aux_1.loss_ce: 0.0973, aux_1.acc_seg: 95.1775, loss: 0.5358
+2023-05-02 13:34:32,746 - mmseg - INFO - Saving checkpoint at 6000 iterations
+2023-05-02 13:34:34,796 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:34:34,796 - mmseg - INFO - Iter [6000/10000]	lr: 4.385e-02, eta: 0:50:06, time: 0.764, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0711, decode.acc_seg: 96.3270, aux_0.loss_ce: 0.1186, aux_0.loss_dice: 0.2514, aux_0.acc_seg: 96.0281, aux_1.loss_ce: 0.0996, aux_1.acc_seg: 95.0392, loss: 0.5407
+2023-05-02 13:34:38,952 - mmseg - INFO - per class results:
+2023-05-02 13:34:38,953 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 85.12 |  95.7 |
+|   Building  |  92.9 | 94.55 |
+|     Car     | 92.55 | 94.12 |
+| Column_Pole | 21.62 | 25.68 |
+|    Fence    | 80.38 |  93.6 |
+|  Pedestrian | 69.03 | 81.84 |
+|     Road    | 97.59 |  98.6 |
+|   Sidewalk  | 92.03 | 97.01 |
+|  SignSymbol |  0.06 |  0.06 |
+|     Sky     | 94.29 | 97.68 |
+|     Tree    | 91.98 | 97.67 |
++-------------+-------+-------+
+2023-05-02 13:34:38,953 - mmseg - INFO - Summary:
+2023-05-02 13:34:38,954 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 96.21 | 74.32 | 79.68 |
++-------+-------+-------+
+2023-05-02 13:34:38,954 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:34:38,954 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9621, mIoU: 0.7432, mAcc: 0.7968, IoU.Bicyclist: 0.8512, IoU.Building: 0.9290, IoU.Car: 0.9255, IoU.Column_Pole: 0.2162, IoU.Fence: 0.8038, IoU.Pedestrian: 0.6903, IoU.Road: 0.9759, IoU.Sidewalk: 0.9203, IoU.SignSymbol: 0.0006, IoU.Sky: 0.9429, IoU.Tree: 0.9198, Acc.Bicyclist: 0.9570, Acc.Building: 0.9455, Acc.Car: 0.9412, Acc.Column_Pole: 0.2568, Acc.Fence: 0.9360, Acc.Pedestrian: 0.8184, Acc.Road: 0.9860, Acc.Sidewalk: 0.9701, Acc.SignSymbol: 0.0006, Acc.Sky: 0.9768, Acc.Tree: 0.9767
+2023-05-02 13:35:15,126 - mmseg - INFO - Iter [6050/10000]	lr: 4.336e-02, eta: 0:49:30, time: 0.806, data_time: 0.277, memory: 18754, decode.loss_ce: 0.0739, decode.acc_seg: 96.2360, aux_0.loss_ce: 0.1166, aux_0.loss_dice: 0.2493, aux_0.acc_seg: 96.0838, aux_1.loss_ce: 0.0977, aux_1.acc_seg: 95.1070, loss: 0.5375
+2023-05-02 13:35:55,145 - mmseg - INFO - Iter [6100/10000]	lr: 4.286e-02, eta: 0:48:54, time: 0.800, data_time: 0.265, memory: 18754, decode.loss_ce: 0.0733, decode.acc_seg: 96.2713, aux_0.loss_ce: 0.1185, aux_0.loss_dice: 0.2512, aux_0.acc_seg: 96.0203, aux_1.loss_ce: 0.0993, aux_1.acc_seg: 95.0463, loss: 0.5424
+2023-05-02 13:36:31,656 - mmseg - INFO - Iter [6150/10000]	lr: 4.237e-02, eta: 0:48:16, time: 0.730, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0711, decode.acc_seg: 96.3645, aux_0.loss_ce: 0.1176, aux_0.loss_dice: 0.2507, aux_0.acc_seg: 96.0613, aux_1.loss_ce: 0.0992, aux_1.acc_seg: 95.1049, loss: 0.5386
+2023-05-02 13:37:07,972 - mmseg - INFO - Iter [6200/10000]	lr: 4.187e-02, eta: 0:47:38, time: 0.726, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0685, decode.acc_seg: 96.5256, aux_0.loss_ce: 0.1196, aux_0.loss_dice: 0.2527, aux_0.acc_seg: 95.9989, aux_1.loss_ce: 0.0980, aux_1.acc_seg: 95.2090, loss: 0.5387
+2023-05-02 13:37:47,128 - mmseg - INFO - Iter [6250/10000]	lr: 4.138e-02, eta: 0:47:01, time: 0.783, data_time: 0.258, memory: 18754, decode.loss_ce: 0.0668, decode.acc_seg: 96.4555, aux_0.loss_ce: 0.1171, aux_0.loss_dice: 0.2496, aux_0.acc_seg: 96.0428, aux_1.loss_ce: 0.0962, aux_1.acc_seg: 95.1154, loss: 0.5297
+2023-05-02 13:38:22,610 - mmseg - INFO - Iter [6300/10000]	lr: 4.088e-02, eta: 0:46:22, time: 0.710, data_time: 0.189, memory: 18754, decode.loss_ce: 0.0656, decode.acc_seg: 96.5976, aux_0.loss_ce: 0.1170, aux_0.loss_dice: 0.2502, aux_0.acc_seg: 96.0616, aux_1.loss_ce: 0.0948, aux_1.acc_seg: 95.2947, loss: 0.5275
+2023-05-02 13:38:58,565 - mmseg - INFO - Iter [6350/10000]	lr: 4.038e-02, eta: 0:45:44, time: 0.719, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0676, decode.acc_seg: 96.4571, aux_0.loss_ce: 0.1166, aux_0.loss_dice: 0.2501, aux_0.acc_seg: 96.1198, aux_1.loss_ce: 0.0967, aux_1.acc_seg: 95.1531, loss: 0.5310
+2023-05-02 13:39:34,691 - mmseg - INFO - Iter [6400/10000]	lr: 3.988e-02, eta: 0:45:05, time: 0.723, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0676, decode.acc_seg: 96.4940, aux_0.loss_ce: 0.1186, aux_0.loss_dice: 0.2508, aux_0.acc_seg: 95.9949, aux_1.loss_ce: 0.0977, aux_1.acc_seg: 95.1605, loss: 0.5348
+2023-05-02 13:40:14,470 - mmseg - INFO - Iter [6450/10000]	lr: 3.938e-02, eta: 0:44:29, time: 0.796, data_time: 0.262, memory: 18754, decode.loss_ce: 0.0679, decode.acc_seg: 96.4561, aux_0.loss_ce: 0.1166, aux_0.loss_dice: 0.2501, aux_0.acc_seg: 96.0993, aux_1.loss_ce: 0.0964, aux_1.acc_seg: 95.1831, loss: 0.5310
+2023-05-02 13:40:50,997 - mmseg - INFO - Iter [6500/10000]	lr: 3.888e-02, eta: 0:43:51, time: 0.731, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0658, decode.acc_seg: 96.5569, aux_0.loss_ce: 0.1185, aux_0.loss_dice: 0.2501, aux_0.acc_seg: 95.9849, aux_1.loss_ce: 0.0961, aux_1.acc_seg: 95.2248, loss: 0.5305
+2023-05-02 13:41:26,849 - mmseg - INFO - Iter [6550/10000]	lr: 3.838e-02, eta: 0:43:12, time: 0.717, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0662, decode.acc_seg: 96.5625, aux_0.loss_ce: 0.1170, aux_0.loss_dice: 0.2486, aux_0.acc_seg: 96.0368, aux_1.loss_ce: 0.0954, aux_1.acc_seg: 95.2493, loss: 0.5272
+2023-05-02 13:42:02,888 - mmseg - INFO - Iter [6600/10000]	lr: 3.788e-02, eta: 0:42:34, time: 0.721, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0640, decode.acc_seg: 96.6380, aux_0.loss_ce: 0.1157, aux_0.loss_dice: 0.2490, aux_0.acc_seg: 96.1178, aux_1.loss_ce: 0.0936, aux_1.acc_seg: 95.2824, loss: 0.5224
+2023-05-02 13:42:42,506 - mmseg - INFO - Iter [6650/10000]	lr: 3.738e-02, eta: 0:41:57, time: 0.792, data_time: 0.264, memory: 18754, decode.loss_ce: 0.0626, decode.acc_seg: 96.7026, aux_0.loss_ce: 0.1159, aux_0.loss_dice: 0.2482, aux_0.acc_seg: 96.0830, aux_1.loss_ce: 0.0925, aux_1.acc_seg: 95.3376, loss: 0.5192
+2023-05-02 13:43:18,365 - mmseg - INFO - Iter [6700/10000]	lr: 3.688e-02, eta: 0:41:19, time: 0.717, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0671, decode.acc_seg: 96.5143, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2511, aux_0.acc_seg: 95.9764, aux_1.loss_ce: 0.0968, aux_1.acc_seg: 95.1962, loss: 0.5340
+2023-05-02 13:43:53,250 - mmseg - INFO - Iter [6750/10000]	lr: 3.638e-02, eta: 0:40:40, time: 0.698, data_time: 0.182, memory: 18754, decode.loss_ce: 0.0644, decode.acc_seg: 96.6432, aux_0.loss_ce: 0.1167, aux_0.loss_dice: 0.2495, aux_0.acc_seg: 96.0492, aux_1.loss_ce: 0.0955, aux_1.acc_seg: 95.2505, loss: 0.5261
+2023-05-02 13:44:31,404 - mmseg - INFO - Iter [6800/10000]	lr: 3.587e-02, eta: 0:40:03, time: 0.763, data_time: 0.251, memory: 18754, decode.loss_ce: 0.0631, decode.acc_seg: 96.6802, aux_0.loss_ce: 0.1163, aux_0.loss_dice: 0.2493, aux_0.acc_seg: 96.0950, aux_1.loss_ce: 0.0923, aux_1.acc_seg: 95.3614, loss: 0.5210
+2023-05-02 13:45:05,913 - mmseg - INFO - Iter [6850/10000]	lr: 3.537e-02, eta: 0:39:24, time: 0.690, data_time: 0.182, memory: 18754, decode.loss_ce: 0.0629, decode.acc_seg: 96.7394, aux_0.loss_ce: 0.1173, aux_0.loss_dice: 0.2500, aux_0.acc_seg: 96.0351, aux_1.loss_ce: 0.0931, aux_1.acc_seg: 95.3705, loss: 0.5233
+2023-05-02 13:45:40,817 - mmseg - INFO - Iter [6900/10000]	lr: 3.486e-02, eta: 0:38:45, time: 0.698, data_time: 0.184, memory: 18754, decode.loss_ce: 0.0625, decode.acc_seg: 96.6811, aux_0.loss_ce: 0.1159, aux_0.loss_dice: 0.2472, aux_0.acc_seg: 96.0686, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.2970, loss: 0.5184
+2023-05-02 13:46:15,534 - mmseg - INFO - Iter [6950/10000]	lr: 3.436e-02, eta: 0:38:06, time: 0.694, data_time: 0.181, memory: 18754, decode.loss_ce: 0.0634, decode.acc_seg: 96.6591, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2497, aux_0.acc_seg: 96.0157, aux_1.loss_ce: 0.0933, aux_1.acc_seg: 95.2776, loss: 0.5246
+2023-05-02 13:46:54,645 - mmseg - INFO - Saving checkpoint at 7000 iterations
+2023-05-02 13:46:56,831 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:46:56,831 - mmseg - INFO - Iter [7000/10000]	lr: 3.385e-02, eta: 0:37:30, time: 0.827, data_time: 0.257, memory: 18754, decode.loss_ce: 0.0626, decode.acc_seg: 96.7257, aux_0.loss_ce: 0.1166, aux_0.loss_dice: 0.2492, aux_0.acc_seg: 96.0782, aux_1.loss_ce: 0.0923, aux_1.acc_seg: 95.3789, loss: 0.5207
+2023-05-02 13:47:01,191 - mmseg - INFO - per class results:
+2023-05-02 13:47:01,192 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 86.92 | 93.33 |
+|   Building  | 93.83 | 95.86 |
+|     Car     | 93.44 |  95.0 |
+| Column_Pole | 13.03 | 13.71 |
+|    Fence    | 80.07 | 97.95 |
+|  Pedestrian | 67.68 | 83.47 |
+|     Road    | 97.32 | 97.87 |
+|   Sidewalk  | 91.19 | 97.83 |
+|  SignSymbol |  0.03 |  0.03 |
+|     Sky     | 94.37 | 97.32 |
+|     Tree    | 92.85 | 97.23 |
++-------------+-------+-------+
+2023-05-02 13:47:01,192 - mmseg - INFO - Summary:
+2023-05-02 13:47:01,192 - mmseg - INFO - 
++-------+------+-------+
+|  aAcc | mIoU |  mAcc |
++-------+------+-------+
+| 96.35 | 73.7 | 79.05 |
++-------+------+-------+
+2023-05-02 13:47:01,193 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:47:01,193 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9635, mIoU: 0.7370, mAcc: 0.7905, IoU.Bicyclist: 0.8692, IoU.Building: 0.9383, IoU.Car: 0.9344, IoU.Column_Pole: 0.1303, IoU.Fence: 0.8007, IoU.Pedestrian: 0.6768, IoU.Road: 0.9732, IoU.Sidewalk: 0.9119, IoU.SignSymbol: 0.0003, IoU.Sky: 0.9437, IoU.Tree: 0.9285, Acc.Bicyclist: 0.9333, Acc.Building: 0.9586, Acc.Car: 0.9500, Acc.Column_Pole: 0.1371, Acc.Fence: 0.9795, Acc.Pedestrian: 0.8347, Acc.Road: 0.9787, Acc.Sidewalk: 0.9783, Acc.SignSymbol: 0.0003, Acc.Sky: 0.9732, Acc.Tree: 0.9723
+2023-05-02 13:47:37,598 - mmseg - INFO - Iter [7050/10000]	lr: 3.334e-02, eta: 0:36:54, time: 0.815, data_time: 0.283, memory: 18754, decode.loss_ce: 0.0682, decode.acc_seg: 96.5354, aux_0.loss_ce: 0.1165, aux_0.loss_dice: 0.2518, aux_0.acc_seg: 96.1467, aux_1.loss_ce: 0.0960, aux_1.acc_seg: 95.2735, loss: 0.5325
+2023-05-02 13:48:13,302 - mmseg - INFO - Iter [7100/10000]	lr: 3.283e-02, eta: 0:36:16, time: 0.714, data_time: 0.187, memory: 18754, decode.loss_ce: 0.0669, decode.acc_seg: 96.5335, aux_0.loss_ce: 0.1177, aux_0.loss_dice: 0.2505, aux_0.acc_seg: 96.0531, aux_1.loss_ce: 0.0958, aux_1.acc_seg: 95.2093, loss: 0.5308
+2023-05-02 13:48:49,313 - mmseg - INFO - Iter [7150/10000]	lr: 3.232e-02, eta: 0:35:38, time: 0.720, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0668, decode.acc_seg: 96.5331, aux_0.loss_ce: 0.1197, aux_0.loss_dice: 0.2516, aux_0.acc_seg: 95.9720, aux_1.loss_ce: 0.0964, aux_1.acc_seg: 95.2000, loss: 0.5345
+2023-05-02 13:49:28,686 - mmseg - INFO - Iter [7200/10000]	lr: 3.181e-02, eta: 0:35:01, time: 0.787, data_time: 0.262, memory: 18754, decode.loss_ce: 0.0627, decode.acc_seg: 96.6980, aux_0.loss_ce: 0.1158, aux_0.loss_dice: 0.2475, aux_0.acc_seg: 96.0893, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.3688, loss: 0.5175
+2023-05-02 13:50:04,200 - mmseg - INFO - Iter [7250/10000]	lr: 3.130e-02, eta: 0:34:23, time: 0.710, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0649, decode.acc_seg: 96.6365, aux_0.loss_ce: 0.1174, aux_0.loss_dice: 0.2505, aux_0.acc_seg: 96.0425, aux_1.loss_ce: 0.0941, aux_1.acc_seg: 95.3269, loss: 0.5270
+2023-05-02 13:50:40,526 - mmseg - INFO - Iter [7300/10000]	lr: 3.079e-02, eta: 0:33:45, time: 0.727, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0658, decode.acc_seg: 96.5679, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2486, aux_0.acc_seg: 96.1008, aux_1.loss_ce: 0.0939, aux_1.acc_seg: 95.2580, loss: 0.5243
+2023-05-02 13:51:19,947 - mmseg - INFO - Iter [7350/10000]	lr: 3.027e-02, eta: 0:33:08, time: 0.788, data_time: 0.264, memory: 18754, decode.loss_ce: 0.0637, decode.acc_seg: 96.6483, aux_0.loss_ce: 0.1175, aux_0.loss_dice: 0.2486, aux_0.acc_seg: 96.0060, aux_1.loss_ce: 0.0936, aux_1.acc_seg: 95.3030, loss: 0.5233
+2023-05-02 13:51:55,995 - mmseg - INFO - Iter [7400/10000]	lr: 2.976e-02, eta: 0:32:30, time: 0.721, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0652, decode.acc_seg: 96.6130, aux_0.loss_ce: 0.1172, aux_0.loss_dice: 0.2506, aux_0.acc_seg: 96.0746, aux_1.loss_ce: 0.0956, aux_1.acc_seg: 95.2465, loss: 0.5286
+2023-05-02 13:52:31,924 - mmseg - INFO - Iter [7450/10000]	lr: 2.924e-02, eta: 0:31:52, time: 0.719, data_time: 0.194, memory: 18754, decode.loss_ce: 0.0626, decode.acc_seg: 96.7350, aux_0.loss_ce: 0.1180, aux_0.loss_dice: 0.2494, aux_0.acc_seg: 96.0172, aux_1.loss_ce: 0.0926, aux_1.acc_seg: 95.3746, loss: 0.5226
+2023-05-02 13:53:07,648 - mmseg - INFO - Iter [7500/10000]	lr: 2.873e-02, eta: 0:31:14, time: 0.714, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0629, decode.acc_seg: 96.7282, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2504, aux_0.acc_seg: 96.0079, aux_1.loss_ce: 0.0934, aux_1.acc_seg: 95.3606, loss: 0.5248
+2023-05-02 13:53:47,141 - mmseg - INFO - Iter [7550/10000]	lr: 2.821e-02, eta: 0:30:37, time: 0.790, data_time: 0.264, memory: 18754, decode.loss_ce: 0.0624, decode.acc_seg: 96.6882, aux_0.loss_ce: 0.1171, aux_0.loss_dice: 0.2484, aux_0.acc_seg: 96.0284, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.2836, loss: 0.5207
+2023-05-02 13:54:23,396 - mmseg - INFO - Iter [7600/10000]	lr: 2.769e-02, eta: 0:29:59, time: 0.725, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0622, decode.acc_seg: 96.7302, aux_0.loss_ce: 0.1158, aux_0.loss_dice: 0.2478, aux_0.acc_seg: 96.0657, aux_1.loss_ce: 0.0925, aux_1.acc_seg: 95.3616, loss: 0.5183
+2023-05-02 13:54:59,764 - mmseg - INFO - Iter [7650/10000]	lr: 2.717e-02, eta: 0:29:21, time: 0.727, data_time: 0.199, memory: 18754, decode.loss_ce: 0.0621, decode.acc_seg: 96.7127, aux_0.loss_ce: 0.1184, aux_0.loss_dice: 0.2494, aux_0.acc_seg: 95.9868, aux_1.loss_ce: 0.0930, aux_1.acc_seg: 95.2846, loss: 0.5229
+2023-05-02 13:55:35,389 - mmseg - INFO - Iter [7700/10000]	lr: 2.665e-02, eta: 0:28:43, time: 0.712, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0651, decode.acc_seg: 96.6297, aux_0.loss_ce: 0.1200, aux_0.loss_dice: 0.2520, aux_0.acc_seg: 95.9436, aux_1.loss_ce: 0.0960, aux_1.acc_seg: 95.2511, loss: 0.5331
+2023-05-02 13:56:14,678 - mmseg - INFO - Iter [7750/10000]	lr: 2.613e-02, eta: 0:28:06, time: 0.786, data_time: 0.263, memory: 18754, decode.loss_ce: 0.0638, decode.acc_seg: 96.6177, aux_0.loss_ce: 0.1172, aux_0.loss_dice: 0.2485, aux_0.acc_seg: 96.0183, aux_1.loss_ce: 0.0944, aux_1.acc_seg: 95.2077, loss: 0.5240
+2023-05-02 13:56:51,172 - mmseg - INFO - Iter [7800/10000]	lr: 2.561e-02, eta: 0:27:29, time: 0.730, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0623, decode.acc_seg: 96.6472, aux_0.loss_ce: 0.1159, aux_0.loss_dice: 0.2481, aux_0.acc_seg: 96.0980, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.2327, loss: 0.5191
+2023-05-02 13:57:27,630 - mmseg - INFO - Iter [7850/10000]	lr: 2.508e-02, eta: 0:26:51, time: 0.729, data_time: 0.201, memory: 18754, decode.loss_ce: 0.0621, decode.acc_seg: 96.7416, aux_0.loss_ce: 0.1167, aux_0.loss_dice: 0.2481, aux_0.acc_seg: 96.0288, aux_1.loss_ce: 0.0925, aux_1.acc_seg: 95.3646, loss: 0.5194
+2023-05-02 13:58:07,513 - mmseg - INFO - Iter [7900/10000]	lr: 2.456e-02, eta: 0:26:14, time: 0.798, data_time: 0.268, memory: 18754, decode.loss_ce: 0.0595, decode.acc_seg: 96.8055, aux_0.loss_ce: 0.1167, aux_0.loss_dice: 0.2472, aux_0.acc_seg: 96.0098, aux_1.loss_ce: 0.0908, aux_1.acc_seg: 95.3592, loss: 0.5142
+2023-05-02 13:58:44,221 - mmseg - INFO - Iter [7950/10000]	lr: 2.403e-02, eta: 0:25:36, time: 0.734, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0614, decode.acc_seg: 96.7416, aux_0.loss_ce: 0.1170, aux_0.loss_dice: 0.2485, aux_0.acc_seg: 96.0364, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.3601, loss: 0.5185
+2023-05-02 13:59:20,305 - mmseg - INFO - Saving checkpoint at 8000 iterations
+2023-05-02 13:59:22,088 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:59:22,089 - mmseg - INFO - Iter [8000/10000]	lr: 2.350e-02, eta: 0:24:59, time: 0.758, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0624, decode.acc_seg: 96.7562, aux_0.loss_ce: 0.1189, aux_0.loss_dice: 0.2504, aux_0.acc_seg: 95.9669, aux_1.loss_ce: 0.0933, aux_1.acc_seg: 95.3608, loss: 0.5250
+2023-05-02 13:59:25,709 - mmseg - INFO - per class results:
+2023-05-02 13:59:25,711 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 87.91 | 94.25 |
+|   Building  | 92.75 | 94.41 |
+|     Car     |  93.5 | 95.05 |
+| Column_Pole | 27.21 | 33.18 |
+|    Fence    | 82.81 | 94.41 |
+|  Pedestrian | 70.08 | 85.13 |
+|     Road    | 97.75 | 98.56 |
+|   Sidewalk  | 92.42 | 97.48 |
+|  SignSymbol |  0.19 |  0.19 |
+|     Sky     | 94.34 | 97.21 |
+|     Tree    | 91.43 | 98.04 |
++-------------+-------+-------+
+2023-05-02 13:59:25,711 - mmseg - INFO - Summary:
+2023-05-02 13:59:25,711 - mmseg - INFO - 
++------+-------+-------+
+| aAcc |  mIoU |  mAcc |
++------+-------+-------+
+| 96.3 | 75.49 | 80.72 |
++------+-------+-------+
+2023-05-02 13:59:25,711 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 13:59:25,711 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9630, mIoU: 0.7549, mAcc: 0.8072, IoU.Bicyclist: 0.8791, IoU.Building: 0.9275, IoU.Car: 0.9350, IoU.Column_Pole: 0.2721, IoU.Fence: 0.8281, IoU.Pedestrian: 0.7008, IoU.Road: 0.9775, IoU.Sidewalk: 0.9242, IoU.SignSymbol: 0.0019, IoU.Sky: 0.9434, IoU.Tree: 0.9143, Acc.Bicyclist: 0.9425, Acc.Building: 0.9441, Acc.Car: 0.9505, Acc.Column_Pole: 0.3318, Acc.Fence: 0.9441, Acc.Pedestrian: 0.8513, Acc.Road: 0.9856, Acc.Sidewalk: 0.9748, Acc.SignSymbol: 0.0019, Acc.Sky: 0.9721, Acc.Tree: 0.9804
+2023-05-02 14:00:01,652 - mmseg - INFO - Iter [8050/10000]	lr: 2.297e-02, eta: 0:24:22, time: 0.790, data_time: 0.263, memory: 18754, decode.loss_ce: 0.0601, decode.acc_seg: 96.7979, aux_0.loss_ce: 0.1154, aux_0.loss_dice: 0.2473, aux_0.acc_seg: 96.0888, aux_1.loss_ce: 0.0912, aux_1.acc_seg: 95.3557, loss: 0.5140
+2023-05-02 14:00:39,952 - mmseg - INFO - Iter [8100/10000]	lr: 2.244e-02, eta: 0:23:45, time: 0.766, data_time: 0.251, memory: 18754, decode.loss_ce: 0.0619, decode.acc_seg: 96.7596, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2505, aux_0.acc_seg: 96.0191, aux_1.loss_ce: 0.0933, aux_1.acc_seg: 95.3221, loss: 0.5238
+2023-05-02 14:01:14,762 - mmseg - INFO - Iter [8150/10000]	lr: 2.191e-02, eta: 0:23:06, time: 0.696, data_time: 0.184, memory: 18754, decode.loss_ce: 0.0607, decode.acc_seg: 96.7319, aux_0.loss_ce: 0.1177, aux_0.loss_dice: 0.2472, aux_0.acc_seg: 95.9393, aux_1.loss_ce: 0.0925, aux_1.acc_seg: 95.2411, loss: 0.5181
+2023-05-02 14:01:50,065 - mmseg - INFO - Iter [8200/10000]	lr: 2.138e-02, eta: 0:22:28, time: 0.706, data_time: 0.185, memory: 18754, decode.loss_ce: 0.0624, decode.acc_seg: 96.7392, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2500, aux_0.acc_seg: 96.0141, aux_1.loss_ce: 0.0931, aux_1.acc_seg: 95.3656, loss: 0.5236
+2023-05-02 14:02:26,369 - mmseg - INFO - Iter [8250/10000]	lr: 2.084e-02, eta: 0:21:51, time: 0.726, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0631, decode.acc_seg: 96.7485, aux_0.loss_ce: 0.1191, aux_0.loss_dice: 0.2524, aux_0.acc_seg: 96.0134, aux_1.loss_ce: 0.0950, aux_1.acc_seg: 95.3158, loss: 0.5296
+2023-05-02 14:03:06,250 - mmseg - INFO - Iter [8300/10000]	lr: 2.031e-02, eta: 0:21:14, time: 0.798, data_time: 0.267, memory: 18754, decode.loss_ce: 0.0573, decode.acc_seg: 96.9367, aux_0.loss_ce: 0.1140, aux_0.loss_dice: 0.2464, aux_0.acc_seg: 96.1375, aux_1.loss_ce: 0.0883, aux_1.acc_seg: 95.5144, loss: 0.5060
+2023-05-02 14:03:42,634 - mmseg - INFO - Iter [8350/10000]	lr: 1.977e-02, eta: 0:20:36, time: 0.728, data_time: 0.199, memory: 18754, decode.loss_ce: 0.0604, decode.acc_seg: 96.8515, aux_0.loss_ce: 0.1190, aux_0.loss_dice: 0.2504, aux_0.acc_seg: 95.9502, aux_1.loss_ce: 0.0920, aux_1.acc_seg: 95.4562, loss: 0.5218
+2023-05-02 14:04:19,118 - mmseg - INFO - Iter [8400/10000]	lr: 1.923e-02, eta: 0:19:58, time: 0.730, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0593, decode.acc_seg: 96.8096, aux_0.loss_ce: 0.1174, aux_0.loss_dice: 0.2482, aux_0.acc_seg: 95.9913, aux_1.loss_ce: 0.0909, aux_1.acc_seg: 95.3146, loss: 0.5158
+2023-05-02 14:04:59,239 - mmseg - INFO - Iter [8450/10000]	lr: 1.869e-02, eta: 0:19:21, time: 0.802, data_time: 0.266, memory: 18754, decode.loss_ce: 0.0580, decode.acc_seg: 96.8601, aux_0.loss_ce: 0.1155, aux_0.loss_dice: 0.2464, aux_0.acc_seg: 96.0670, aux_1.loss_ce: 0.0888, aux_1.acc_seg: 95.4357, loss: 0.5088
+2023-05-02 14:05:35,836 - mmseg - INFO - Iter [8500/10000]	lr: 1.815e-02, eta: 0:18:44, time: 0.732, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0594, decode.acc_seg: 96.8296, aux_0.loss_ce: 0.1169, aux_0.loss_dice: 0.2477, aux_0.acc_seg: 96.0126, aux_1.loss_ce: 0.0922, aux_1.acc_seg: 95.3209, loss: 0.5162
+2023-05-02 14:06:12,208 - mmseg - INFO - Iter [8550/10000]	lr: 1.760e-02, eta: 0:18:06, time: 0.727, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0585, decode.acc_seg: 96.8927, aux_0.loss_ce: 0.1157, aux_0.loss_dice: 0.2465, aux_0.acc_seg: 96.0448, aux_1.loss_ce: 0.0897, aux_1.acc_seg: 95.4680, loss: 0.5104
+2023-05-02 14:06:48,993 - mmseg - INFO - Iter [8600/10000]	lr: 1.705e-02, eta: 0:17:29, time: 0.736, data_time: 0.198, memory: 18754, decode.loss_ce: 0.0588, decode.acc_seg: 96.8546, aux_0.loss_ce: 0.1171, aux_0.loss_dice: 0.2479, aux_0.acc_seg: 96.0214, aux_1.loss_ce: 0.0907, aux_1.acc_seg: 95.3842, loss: 0.5145
+2023-05-02 14:07:27,897 - mmseg - INFO - Iter [8650/10000]	lr: 1.650e-02, eta: 0:16:51, time: 0.778, data_time: 0.256, memory: 18754, decode.loss_ce: 0.0592, decode.acc_seg: 96.8272, aux_0.loss_ce: 0.1182, aux_0.loss_dice: 0.2479, aux_0.acc_seg: 95.9263, aux_1.loss_ce: 0.0918, aux_1.acc_seg: 95.3187, loss: 0.5171
+2023-05-02 14:08:03,153 - mmseg - INFO - Iter [8700/10000]	lr: 1.595e-02, eta: 0:16:14, time: 0.705, data_time: 0.186, memory: 18754, decode.loss_ce: 0.0594, decode.acc_seg: 96.8709, aux_0.loss_ce: 0.1156, aux_0.loss_dice: 0.2472, aux_0.acc_seg: 96.0516, aux_1.loss_ce: 0.0913, aux_1.acc_seg: 95.4363, loss: 0.5136
+2023-05-02 14:08:39,108 - mmseg - INFO - Iter [8750/10000]	lr: 1.540e-02, eta: 0:15:36, time: 0.719, data_time: 0.193, memory: 18754, decode.loss_ce: 0.0604, decode.acc_seg: 96.7933, aux_0.loss_ce: 0.1178, aux_0.loss_dice: 0.2489, aux_0.acc_seg: 96.0032, aux_1.loss_ce: 0.0927, aux_1.acc_seg: 95.3102, loss: 0.5198
+2023-05-02 14:09:14,818 - mmseg - INFO - Iter [8800/10000]	lr: 1.485e-02, eta: 0:14:58, time: 0.714, data_time: 0.192, memory: 18754, decode.loss_ce: 0.0585, decode.acc_seg: 96.8858, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2476, aux_0.acc_seg: 96.0469, aux_1.loss_ce: 0.0907, aux_1.acc_seg: 95.3964, loss: 0.5128
+2023-05-02 14:09:53,853 - mmseg - INFO - Iter [8850/10000]	lr: 1.429e-02, eta: 0:14:21, time: 0.781, data_time: 0.261, memory: 18754, decode.loss_ce: 0.0589, decode.acc_seg: 96.9012, aux_0.loss_ce: 0.1175, aux_0.loss_dice: 0.2495, aux_0.acc_seg: 96.0157, aux_1.loss_ce: 0.0912, aux_1.acc_seg: 95.4361, loss: 0.5171
+2023-05-02 14:10:30,289 - mmseg - INFO - Iter [8900/10000]	lr: 1.373e-02, eta: 0:13:43, time: 0.729, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0574, decode.acc_seg: 96.9508, aux_0.loss_ce: 0.1152, aux_0.loss_dice: 0.2470, aux_0.acc_seg: 96.0973, aux_1.loss_ce: 0.0894, aux_1.acc_seg: 95.4940, loss: 0.5091
+2023-05-02 14:11:06,966 - mmseg - INFO - Iter [8950/10000]	lr: 1.317e-02, eta: 0:13:06, time: 0.733, data_time: 0.200, memory: 18754, decode.loss_ce: 0.0568, decode.acc_seg: 96.9223, aux_0.loss_ce: 0.1146, aux_0.loss_dice: 0.2461, aux_0.acc_seg: 96.0869, aux_1.loss_ce: 0.0892, aux_1.acc_seg: 95.3995, loss: 0.5067
+2023-05-02 14:11:46,906 - mmseg - INFO - Saving checkpoint at 9000 iterations
+2023-05-02 14:11:49,128 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 14:11:49,128 - mmseg - INFO - Iter [9000/10000]	lr: 1.260e-02, eta: 0:12:29, time: 0.844, data_time: 0.268, memory: 18754, decode.loss_ce: 0.0567, decode.acc_seg: 96.9791, aux_0.loss_ce: 0.1178, aux_0.loss_dice: 0.2485, aux_0.acc_seg: 95.9927, aux_1.loss_ce: 0.0897, aux_1.acc_seg: 95.4859, loss: 0.5127
+2023-05-02 14:11:53,214 - mmseg - INFO - per class results:
+2023-05-02 14:11:53,216 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 87.37 | 93.43 |
+|   Building  | 93.04 | 94.76 |
+|     Car     | 93.57 | 95.46 |
+| Column_Pole | 24.53 | 27.91 |
+|    Fence    | 83.39 | 93.88 |
+|  Pedestrian | 70.86 | 86.77 |
+|     Road    | 97.75 | 98.78 |
+|   Sidewalk  | 92.57 | 96.95 |
+|  SignSymbol |  0.23 |  0.23 |
+|     Sky     | 94.14 |  97.6 |
+|     Tree    | 91.73 | 97.99 |
++-------------+-------+-------+
+2023-05-02 14:11:53,216 - mmseg - INFO - Summary:
+2023-05-02 14:11:53,216 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 96.38 | 75.38 | 80.34 |
++-------+-------+-------+
+2023-05-02 14:11:53,216 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 14:11:53,216 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9638, mIoU: 0.7538, mAcc: 0.8034, IoU.Bicyclist: 0.8737, IoU.Building: 0.9304, IoU.Car: 0.9357, IoU.Column_Pole: 0.2453, IoU.Fence: 0.8339, IoU.Pedestrian: 0.7086, IoU.Road: 0.9775, IoU.Sidewalk: 0.9257, IoU.SignSymbol: 0.0023, IoU.Sky: 0.9414, IoU.Tree: 0.9173, Acc.Bicyclist: 0.9343, Acc.Building: 0.9476, Acc.Car: 0.9546, Acc.Column_Pole: 0.2791, Acc.Fence: 0.9388, Acc.Pedestrian: 0.8677, Acc.Road: 0.9878, Acc.Sidewalk: 0.9695, Acc.SignSymbol: 0.0023, Acc.Sky: 0.9760, Acc.Tree: 0.9799
+2023-05-02 14:12:29,255 - mmseg - INFO - Iter [9050/10000]	lr: 1.203e-02, eta: 0:11:52, time: 0.802, data_time: 0.277, memory: 18754, decode.loss_ce: 0.0602, decode.acc_seg: 96.8606, aux_0.loss_ce: 0.1188, aux_0.loss_dice: 0.2498, aux_0.acc_seg: 95.9365, aux_1.loss_ce: 0.0940, aux_1.acc_seg: 95.3426, loss: 0.5228
+2023-05-02 14:13:05,316 - mmseg - INFO - Iter [9100/10000]	lr: 1.146e-02, eta: 0:11:14, time: 0.721, data_time: 0.195, memory: 18754, decode.loss_ce: 0.0583, decode.acc_seg: 96.9189, aux_0.loss_ce: 0.1156, aux_0.loss_dice: 0.2479, aux_0.acc_seg: 96.0870, aux_1.loss_ce: 0.0909, aux_1.acc_seg: 95.4284, loss: 0.5128
+2023-05-02 14:13:40,816 - mmseg - INFO - Iter [9150/10000]	lr: 1.089e-02, eta: 0:10:36, time: 0.710, data_time: 0.186, memory: 18754, decode.loss_ce: 0.0598, decode.acc_seg: 96.8611, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2479, aux_0.acc_seg: 96.0782, aux_1.loss_ce: 0.0918, aux_1.acc_seg: 95.4114, loss: 0.5154
+2023-05-02 14:14:20,642 - mmseg - INFO - Iter [9200/10000]	lr: 1.031e-02, eta: 0:09:59, time: 0.797, data_time: 0.265, memory: 18754, decode.loss_ce: 0.0574, decode.acc_seg: 96.9039, aux_0.loss_ce: 0.1152, aux_0.loss_dice: 0.2454, aux_0.acc_seg: 96.0278, aux_1.loss_ce: 0.0900, aux_1.acc_seg: 95.3838, loss: 0.5081
+2023-05-02 14:14:57,134 - mmseg - INFO - Iter [9250/10000]	lr: 9.730e-03, eta: 0:09:22, time: 0.730, data_time: 0.199, memory: 18754, decode.loss_ce: 0.0588, decode.acc_seg: 96.8493, aux_0.loss_ce: 0.1174, aux_0.loss_dice: 0.2477, aux_0.acc_seg: 95.9829, aux_1.loss_ce: 0.0914, aux_1.acc_seg: 95.3419, loss: 0.5153
+2023-05-02 14:15:33,037 - mmseg - INFO - Iter [9300/10000]	lr: 9.145e-03, eta: 0:08:44, time: 0.718, data_time: 0.191, memory: 18754, decode.loss_ce: 0.0567, decode.acc_seg: 96.9835, aux_0.loss_ce: 0.1155, aux_0.loss_dice: 0.2482, aux_0.acc_seg: 96.1056, aux_1.loss_ce: 0.0891, aux_1.acc_seg: 95.5075, loss: 0.5095
+2023-05-02 14:16:08,433 - mmseg - INFO - Iter [9350/10000]	lr: 8.556e-03, eta: 0:08:06, time: 0.708, data_time: 0.190, memory: 18754, decode.loss_ce: 0.0571, decode.acc_seg: 96.9464, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2455, aux_0.acc_seg: 96.0171, aux_1.loss_ce: 0.0900, aux_1.acc_seg: 95.4543, loss: 0.5086
+2023-05-02 14:16:48,518 - mmseg - INFO - Iter [9400/10000]	lr: 7.962e-03, eta: 0:07:29, time: 0.802, data_time: 0.268, memory: 18754, decode.loss_ce: 0.0578, decode.acc_seg: 96.9603, aux_0.loss_ce: 0.1168, aux_0.loss_dice: 0.2492, aux_0.acc_seg: 96.0427, aux_1.loss_ce: 0.0919, aux_1.acc_seg: 95.4092, loss: 0.5158
+2023-05-02 14:17:24,956 - mmseg - INFO - Iter [9450/10000]	lr: 7.364e-03, eta: 0:06:52, time: 0.729, data_time: 0.201, memory: 18754, decode.loss_ce: 0.0564, decode.acc_seg: 97.0208, aux_0.loss_ce: 0.1158, aux_0.loss_dice: 0.2471, aux_0.acc_seg: 96.0469, aux_1.loss_ce: 0.0888, aux_1.acc_seg: 95.5629, loss: 0.5081
+2023-05-02 14:18:01,952 - mmseg - INFO - Iter [9500/10000]	lr: 6.759e-03, eta: 0:06:14, time: 0.740, data_time: 0.207, memory: 18754, decode.loss_ce: 0.0577, decode.acc_seg: 96.9399, aux_0.loss_ce: 0.1174, aux_0.loss_dice: 0.2484, aux_0.acc_seg: 95.9922, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.3669, loss: 0.5151
+2023-05-02 14:18:42,131 - mmseg - INFO - Iter [9550/10000]	lr: 6.149e-03, eta: 0:05:37, time: 0.804, data_time: 0.271, memory: 18754, decode.loss_ce: 0.0566, decode.acc_seg: 97.0102, aux_0.loss_ce: 0.1160, aux_0.loss_dice: 0.2480, aux_0.acc_seg: 96.0594, aux_1.loss_ce: 0.0895, aux_1.acc_seg: 95.4868, loss: 0.5101
+2023-05-02 14:19:18,161 - mmseg - INFO - Iter [9600/10000]	lr: 5.532e-03, eta: 0:04:59, time: 0.721, data_time: 0.197, memory: 18754, decode.loss_ce: 0.0561, decode.acc_seg: 97.0313, aux_0.loss_ce: 0.1171, aux_0.loss_dice: 0.2478, aux_0.acc_seg: 95.9725, aux_1.loss_ce: 0.0897, aux_1.acc_seg: 95.5047, loss: 0.5108
+2023-05-02 14:19:54,527 - mmseg - INFO - Iter [9650/10000]	lr: 4.908e-03, eta: 0:04:22, time: 0.727, data_time: 0.196, memory: 18754, decode.loss_ce: 0.0562, decode.acc_seg: 96.9843, aux_0.loss_ce: 0.1162, aux_0.loss_dice: 0.2480, aux_0.acc_seg: 96.0602, aux_1.loss_ce: 0.0902, aux_1.acc_seg: 95.4382, loss: 0.5106
+2023-05-02 14:20:31,413 - mmseg - INFO - Iter [9700/10000]	lr: 4.274e-03, eta: 0:03:44, time: 0.738, data_time: 0.206, memory: 18754, decode.loss_ce: 0.0582, decode.acc_seg: 96.9514, aux_0.loss_ce: 0.1167, aux_0.loss_dice: 0.2484, aux_0.acc_seg: 96.0503, aux_1.loss_ce: 0.0928, aux_1.acc_seg: 95.3799, loss: 0.5161
+2023-05-02 14:21:11,739 - mmseg - INFO - Iter [9750/10000]	lr: 3.629e-03, eta: 0:03:07, time: 0.807, data_time: 0.273, memory: 18754, decode.loss_ce: 0.0565, decode.acc_seg: 97.0035, aux_0.loss_ce: 0.1164, aux_0.loss_dice: 0.2478, aux_0.acc_seg: 96.0460, aux_1.loss_ce: 0.0909, aux_1.acc_seg: 95.4287, loss: 0.5116
+2023-05-02 14:21:48,539 - mmseg - INFO - Iter [9800/10000]	lr: 2.972e-03, eta: 0:02:29, time: 0.736, data_time: 0.206, memory: 18754, decode.loss_ce: 0.0569, decode.acc_seg: 97.0255, aux_0.loss_ce: 0.1177, aux_0.loss_dice: 0.2493, aux_0.acc_seg: 96.0123, aux_1.loss_ce: 0.0916, aux_1.acc_seg: 95.4601, loss: 0.5155
+2023-05-02 14:22:25,148 - mmseg - INFO - Iter [9850/10000]	lr: 2.298e-03, eta: 0:01:52, time: 0.732, data_time: 0.203, memory: 18754, decode.loss_ce: 0.0570, decode.acc_seg: 96.9784, aux_0.loss_ce: 0.1163, aux_0.loss_dice: 0.2477, aux_0.acc_seg: 96.0603, aux_1.loss_ce: 0.0904, aux_1.acc_seg: 95.4503, loss: 0.5114
+2023-05-02 14:23:02,069 - mmseg - INFO - Iter [9900/10000]	lr: 1.600e-03, eta: 0:01:14, time: 0.738, data_time: 0.207, memory: 18754, decode.loss_ce: 0.0557, decode.acc_seg: 96.9769, aux_0.loss_ce: 0.1153, aux_0.loss_dice: 0.2468, aux_0.acc_seg: 96.0856, aux_1.loss_ce: 0.0896, aux_1.acc_seg: 95.3913, loss: 0.5073
+2023-05-02 14:23:41,893 - mmseg - INFO - Iter [9950/10000]	lr: 8.656e-04, eta: 0:00:37, time: 0.797, data_time: 0.268, memory: 18754, decode.loss_ce: 0.0552, decode.acc_seg: 97.0220, aux_0.loss_ce: 0.1146, aux_0.loss_dice: 0.2469, aux_0.acc_seg: 96.1195, aux_1.loss_ce: 0.0885, aux_1.acc_seg: 95.4984, loss: 0.5053
+2023-05-02 14:24:18,508 - mmseg - INFO - Saving checkpoint at 10000 iterations
+2023-05-02 14:24:20,659 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 14:24:20,659 - mmseg - INFO - Iter [10000/10000]	lr: 2.612e-05, eta: 0:00:00, time: 0.776, data_time: 0.204, memory: 18754, decode.loss_ce: 0.0540, decode.acc_seg: 97.1027, aux_0.loss_ce: 0.1146, aux_0.loss_dice: 0.2452, aux_0.acc_seg: 96.0854, aux_1.loss_ce: 0.0880, aux_1.acc_seg: 95.5249, loss: 0.5018
+2023-05-02 14:24:25,484 - mmseg - INFO - per class results:
+2023-05-02 14:24:25,486 - mmseg - INFO - 
++-------------+-------+-------+
+|    Class    |  IoU  |  Acc  |
++-------------+-------+-------+
+|  Bicyclist  | 87.31 | 93.91 |
+|   Building  |  93.1 | 94.91 |
+|     Car     | 94.04 | 96.01 |
+| Column_Pole | 26.34 | 30.62 |
+|    Fence    | 83.17 | 92.59 |
+|  Pedestrian | 70.64 | 87.14 |
+|     Road    |  97.7 | 98.57 |
+|   Sidewalk  | 92.48 | 97.02 |
+|  SignSymbol |  0.35 |  0.35 |
+|     Sky     | 94.18 | 97.07 |
+|     Tree    | 91.55 | 98.28 |
++-------------+-------+-------+
+2023-05-02 14:24:25,486 - mmseg - INFO - Summary:
+2023-05-02 14:24:25,486 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 96.36 | 75.53 | 80.59 |
++-------+-------+-------+
+2023-05-02 14:24:25,486 - mmseg - INFO - Exp name: csctextnet_stdc1_1x16_720x960_10k_camvid_removearmaux.py
+2023-05-02 14:24:25,487 - mmseg - INFO - Iter(val) [101]	aAcc: 0.9636, mIoU: 0.7553, mAcc: 0.8059, IoU.Bicyclist: 0.8731, IoU.Building: 0.9310, IoU.Car: 0.9404, IoU.Column_Pole: 0.2634, IoU.Fence: 0.8317, IoU.Pedestrian: 0.7064, IoU.Road: 0.9770, IoU.Sidewalk: 0.9248, IoU.SignSymbol: 0.0035, IoU.Sky: 0.9418, IoU.Tree: 0.9155, Acc.Bicyclist: 0.9391, Acc.Building: 0.9491, Acc.Car: 0.9601, Acc.Column_Pole: 0.3062, Acc.Fence: 0.9259, Acc.Pedestrian: 0.8714, Acc.Road: 0.9857, Acc.Sidewalk: 0.9702, Acc.SignSymbol: 0.0035, Acc.Sky: 0.9707, Acc.Tree: 0.9828
