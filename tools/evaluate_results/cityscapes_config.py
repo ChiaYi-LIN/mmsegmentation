@@ -10,8 +10,47 @@ class CityscapesDatasetConfig:
                [255, 0, 0], [0, 0, 142], [0, 0, 70], [0, 60, 100],
                [0, 80, 100], [0, 0, 230], [119, 11, 32]]
     
+    ID = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
+    
     PATH = "/tmp2/linchiayi/test_exp_env/mmsegmentation/data/cityscapes/gtFine/val"
 
-    SUFFIX = "_gtFine_labelTrainIds.png"
+    SUFFIX = "_gtFine_labelIds.png"
 
     IGNORE_CLASS = 255
+
+    LABELS = {
+        "bicycle": 33,
+        "bridge": 15,
+        "building": 11,
+        "bus": 28,
+        "car": 26,
+        "caravan": 29,
+        "dynamic": 5,
+        "ego vehicle": 1,
+        "fence": 13,
+        "ground": 6,
+        "guard rail": 14,
+        "motorcycle": 32,
+        "out of roi": 3,
+        "parking": 9,
+        "person": 24,
+        "pole": 17,
+        "polegroup": 18,
+        "rail track": 10,
+        "rectification border": 2,
+        "rider": 25,
+        "road": 7,
+        "sidewalk": 8,
+        "sky": 23,
+        "static": 4,
+        "terrain": 22,
+        "traffic light": 19,
+        "traffic sign": 20,
+        "trailer": 30,
+        "train": 31,
+        "truck": 27,
+        "tunnel": 16,
+        "unlabeled": 0,
+        "vegetation": 21,
+        "wall": 12
+    }
